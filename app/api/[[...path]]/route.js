@@ -47,6 +47,38 @@ async function handleRoute(request, { params }) {
       return handleCORS(NextResponse.json({ message: "Hello World" }))
     }
 
+    // Contact form - POST /api/contact
+    if (route === '/contact' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.email || !body.message) {
+        return handleCORS(NextResponse.json(
+          { error: "name, email and message are required" },
+          { status: 400 }
+        ))
+      }
+      const contact = {
+        id: uuidv4(),
+        name: String(body.name).slice(0, 200),
+        email: String(body.email).slice(0, 200),
+        message: String(body.message).slice(0, 4000),
+        createdAt: new Date(),
+      }
+      await db.collection('contacts').insertOne(contact)
+      const { _id, ...clean } = contact
+      return handleCORS(NextResponse.json({ success: true, contact: clean }))
+    }
+
+    // Contact list - GET /api/contact
+    if (route === '/contact' && method === 'GET') {
+      const contacts = await db.collection('contacts')
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(500)
+        .toArray()
+      const cleaned = contacts.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleaned))
+    }
+
     // Status endpoints - POST /api/status
     if (route === '/status' && method === 'POST') {
       const body = await request.json()

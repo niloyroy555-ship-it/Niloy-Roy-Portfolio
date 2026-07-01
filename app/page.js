@@ -1,53 +1,42 @@
 'use client'
 
-import { useEffect } from "react";
-import Image from "next/image";
-import { HOME } from "@/lib/constants/testIds";
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await fetch('/api/');
-      const data = await response.json();
-      console.log(data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4"
-            alt="Emergent"
-            width={120}
-            height={120}
-          />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+import { useState } from 'react'
+import { Toaster } from 'sonner'
+import SmoothScroll from '@/components/site/smooth-scroll'
+import CustomCursor from '@/components/site/custom-cursor'
+import Nav from '@/components/site/nav'
+import Hero from '@/components/site/hero'
+import Marquee from '@/components/site/marquee'
+import Portfolio from '@/components/site/portfolio'
+import ProjectModal from '@/components/site/project-modal'
+import About from '@/components/site/about'
+import Timeline from '@/components/site/timeline'
+import Contact from '@/components/site/contact'
+import Footer from '@/components/site/footer'
 
 function App() {
+  const [active, setActive] = useState(null)
+
   return (
-    <div className="App">
-      <Home />
-    </div>
-  );
+    <SmoothScroll>
+      <div className="relative bg-ink-950">
+        <div className="grain" aria-hidden />
+        <CustomCursor />
+        <Toaster theme="dark" position="bottom-center" richColors />
+        <Nav />
+        <main>
+          <Hero />
+          <Marquee />
+          <Portfolio onOpen={setActive} />
+          <About />
+          <Timeline />
+          <Contact />
+        </main>
+        <Footer />
+        <ProjectModal project={active} onClose={() => setActive(null)} />
+      </div>
+    </SmoothScroll>
+  )
 }
 
-export default App;
+export default App

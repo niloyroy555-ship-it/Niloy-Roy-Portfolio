@@ -101,3 +101,53 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Premium portfolio website for AI Visual Designer / Motion Designer / Video Editor (Niloy Roy). Cinematic, minimal, monochrome + electric-blue accent, with mind-bending Framer Motion / Lenis / Canvas particle interactions. Sections: Hero, Marquee, Portfolio (case-study modals), About, Experience timeline, Contact form, Footer."
+
+backend:
+  - task: "Contact form API (POST /api/contact, GET /api/contact)"
+    implemented: true
+    working: true
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Added POST /api/contact (validates name/email/message, stores in 'contacts' collection with uuid, returns cleaned object) and GET /api/contact (lists, sorted desc, _id stripped). Uses MONGO_URL + DB_NAME env. Needs testing for validation, persistence, and error handling."
+        -working: true
+        -agent: "testing"
+        -comment: "Backend testing complete. All 6 tests passed: (1) GET /api/root returns {message:'Hello World'} ✓ (2) POST /api/contact with valid data returns 200 with {success:true, contact:{id(UUID), name, email, message, createdAt}} and NO _id field ✓ (3) POST with missing field returns 400 with error ✓ (4) POST with empty strings returns 400 with error ✓ (5) GET /api/contact returns array with all required fields, NO _id, sorted by createdAt descending ✓ (6) Persistence verified - contact created via POST is retrievable via GET ✓. Contact API is fully functional."
+
+frontend:
+  - task: "Portfolio landing experience (hero, particles, morphing role, marquee, portfolio grid, project modal, about, timeline, contact, footer)"
+    implemented: true
+    working: "NA"
+    file: "/app/app/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Full site built. Verified via screenshots: hero renders with particles + morphing role, portfolio cards render (image + video posters via ffmpeg), project modal opens with cinematic expand. Frontend testing pending explicit user approval."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Contact form API (POST /api/contact, GET /api/contact)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    -agent: "main"
+    -message: "Please test the backend contact API only. Endpoints: POST /api/contact with JSON {name,email,message} should return {success:true, contact:{...}} and persist to Mongo 'contacts' collection; missing fields should return 400. GET /api/contact should return an array of contacts (no _id). Do not test frontend."
+    -agent: "testing"
+    -message: "Backend Contact API testing completed successfully. All 6 test cases passed including: root endpoint sanity check, POST with valid data (UUID id, no _id field), POST validation (missing fields & empty strings return 400), GET endpoint (array response, no _id, sorted descending), and persistence verification. The Contact API is fully functional and ready for production use."
