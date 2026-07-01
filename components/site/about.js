@@ -8,21 +8,28 @@ import RevealMedia from './reveal-media'
 
 function Counter({ value, suffix }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const inView = useInView(ref, { once: true, margin: '-40px' })
   const [n, setN] = useState(0)
+  const started = useRef(false)
   useEffect(() => {
-    if (!inView) return
-    let raf
-    const start = performance.now()
-    const dur = 1400
-    const tick = (t) => {
-      const p = Math.min((t - start) / dur, 1)
-      const eased = 1 - Math.pow(1 - p, 3)
-      setN(Math.round(eased * value))
-      if (p < 1) raf = requestAnimationFrame(tick)
+    const run = () => {
+      if (started.current) return
+      started.current = true
+      let raf
+      const start = performance.now()
+      const dur = 1400
+      const tick = (t) => {
+        const p = Math.min((t - start) / dur, 1)
+        const eased = 1 - Math.pow(1 - p, 3)
+        setN(Math.round(eased * value))
+        if (p < 1) raf = requestAnimationFrame(tick)
+      }
+      raf = requestAnimationFrame(tick)
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
+    if (inView) run()
+    // Fallback: guarantee the number renders even if the in-view observer misfires.
+    const fallback = setTimeout(run, 1000)
+    return () => clearTimeout(fallback)
   }, [inView, value])
   return (
     <span ref={ref}>

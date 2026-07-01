@@ -36,9 +36,11 @@ export default function SmoothScroll({ children }) {
 export function scrollToId(id) {
   const el = typeof id === 'string' && id.startsWith('#') ? document.querySelector(id) : id
   if (!el) return
+  const offset = -84 // account for the fixed nav height
   if (window.__lenis) {
-    window.__lenis.scrollTo(el, { offset: -10, duration: 1.3 })
+    window.__lenis.scrollTo(el, { offset, duration: 1.2 })
   } else {
-    el.scrollIntoView({ behavior: 'smooth' })
+    const top = el.getBoundingClientRect().top + window.scrollY + offset
+    window.scrollTo({ top, behavior: 'smooth' })
   }
 }
