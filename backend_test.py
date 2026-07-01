@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Backend API Test Suite for Niloy Roy Portfolio - Contact API
+Backend API Test Suite for Niloy Roy Portfolio - Contact API with Resend Integration
 Tests the Contact form endpoints: POST /api/contact and GET /api/contact
+Now includes testing for Resend email integration (emailed field)
 """
 
 import requests
 import json
 import os
+import time
 from datetime import datetime
 
 # Base URL from environment
@@ -40,84 +42,121 @@ def test_root_endpoint():
 
 
 def test_post_contact_valid():
-    """Test POST /api/contact with valid data"""
+    """Test POST /api/contact with valid data - NOW WITH RESEND EMAIL INTEGRATION"""
     print("\n" + "="*80)
-    print("TEST 2: POST /api/contact with valid data")
+    print("TEST 2: POST /api/contact with valid data (Resend email integration)")
     print("="*80)
     
     payload = {
-        "name": "Sarah Mitchell",
-        "email": "sarah.mitchell@designstudio.com",
-        "message": "Hi Niloy, I came across your portfolio and I'm absolutely blown away by your motion design work. Would love to discuss a potential collaboration on an upcoming project."
+        "name": "Jane Client",
+        "email": "jane@example.com",
+        "message": "Hi Niloy, I would love to work with you on a brand film."
     }
     
     try:
+        # Measure response time to ensure Resend call completes within reasonable time
+        start_time = time.time()
+        
         response = requests.post(
             f"{BASE_URL}/contact",
             json=payload,
             headers={"Content-Type": "application/json"},
-            timeout=10
+            timeout=15  # Increased timeout for Resend API call
         )
         
+        response_time = time.time() - start_time
+        
         print(f"Status Code: {response.status_code}")
+        print(f"Response Time: {response_time:.2f} seconds")
         print(f"Response: {response.text}")
         
         if response.status_code != 200:
             print(f"❌ FAIL: Expected status 200, got {response.status_code}")
-            return False, None
+            return False, None, None
         
         data = response.json()
         
         # Check response structure
         if not data.get("success"):
             print(f"❌ FAIL: Expected success=true, got {data.get('success')}")
-            return False, None
+            return False, None, None
+        
+        # *** NEW: Check for 'emailed' field (Resend integration) ***
+        if "emailed" not in data:
+            print("❌ FAIL: Missing 'emailed' field in response (Resend integration)")
+            return False, None, None
+        
+        emailed = data.get("emailed")
+        print(f"\n📧 RESEND EMAIL STATUS: emailed = {emailed}")
+        
+        if not isinstance(emailed, bool):
+            print(f"❌ FAIL: 'emailed' field should be boolean, got {type(emailed)}")
+            return False, None, None
+        
+        # If emailed is false, check for error details
+        if not emailed:
+            print("⚠️  WARNING: Email was not sent (emailed=false)")
+            if "error" in data:
+                print(f"   Error detail: {data.get('error')}")
+            else:
+                print("   No error detail in response (check server logs)")
+        else:
+            print("✅ Email successfully sent via Resend")
+        
+        # Check response time is reasonable (Resend should complete within a few seconds)
+        if response_time > 10:
+            print(f"⚠️  WARNING: Response took {response_time:.2f}s (longer than expected)")
+        else:
+            print(f"✅ Response time acceptable: {response_time:.2f}s")
         
         contact = data.get("contact")
         if not contact:
             print("❌ FAIL: No contact object in response")
-            return False, None
+            return False, None, None
         
         # Verify required fields
         required_fields = ["id", "name", "email", "message", "createdAt"]
         for field in required_fields:
             if field not in contact:
                 print(f"❌ FAIL: Missing required field '{field}' in contact")
-                return False, None
+                return False, None, None
         
         # Verify NO _id field (MongoDB field should be stripped)
         if "_id" in contact:
             print("❌ FAIL: Response contains MongoDB '_id' field (should be stripped)")
-            return False, None
+            return False, None, None
         
         # Verify id is a UUID (36 characters with hyphens)
         contact_id = contact.get("id")
         if not isinstance(contact_id, str) or len(contact_id) != 36 or contact_id.count("-") != 4:
             print(f"❌ FAIL: 'id' is not a valid UUID format: {contact_id}")
-            return False, None
+            return False, None, None
         
         # Verify data matches
         if contact.get("name") != payload["name"]:
             print(f"❌ FAIL: Name mismatch. Expected '{payload['name']}', got '{contact.get('name')}'")
-            return False, None
+            return False, None, None
         
         if contact.get("email") != payload["email"]:
             print(f"❌ FAIL: Email mismatch. Expected '{payload['email']}', got '{contact.get('email')}'")
-            return False, None
+            return False, None, None
         
         if contact.get("message") != payload["message"]:
             print(f"❌ FAIL: Message mismatch")
-            return False, None
+            return False, None, None
         
-        print("✅ PASS: Valid POST request successful")
+        print("\n✅ PASS: Valid POST request successful with Resend integration")
         print(f"   - Contact ID (UUID): {contact_id}")
         print(f"   - No '_id' field: ✓")
         print(f"   - All required fields present: ✓")
-        return True, contact_id
+        print(f"   - 'emailed' field present: ✓")
+        print(f"   - Email sent: {emailed}")
+        print(f"   - Response time: {response_time:.2f}s")
+        return True, contact_id, emailed
         
     except Exception as e:
         print(f"❌ FAIL: Exception occurred: {str(e)}")
-        return False, None
+        return False, None, None
 
 
 def test_post_contact_missing_field():
@@ -315,19 +354,20 @@ def main():
     """Run all backend tests"""
     print("\n" + "="*80)
     print("BACKEND API TEST SUITE - NILOY ROY PORTFOLIO")
-    print("Testing Contact API Endpoints")
+    print("Testing Contact API Endpoints with Resend Email Integration")
     print("="*80)
     print(f"Base URL: {BASE_URL}")
     print(f"Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     results = {}
     contact_id = None
+    emailed_status = None
     
     # Test 1: Root endpoint (sanity check)
     results["root_endpoint"] = test_root_endpoint()
     
-    # Test 2: POST with valid data
-    post_result, contact_id = test_post_contact_valid()
+    # Test 2: POST with valid data (NOW WITH RESEND EMAIL CHECK)
+    post_result, contact_id, emailed_status = test_post_contact_valid()
     results["post_valid"] = post_result
     
     # Test 3: POST with missing field
@@ -358,6 +398,14 @@ def main():
         print(f"{status}: {test_name}")
     
     print(f"\nTotal: {passed}/{total} tests passed")
+    
+    # Report Resend email status
+    if emailed_status is not None:
+        print(f"\n📧 RESEND EMAIL INTEGRATION STATUS: emailed = {emailed_status}")
+        if emailed_status:
+            print("   ✅ Email successfully sent to niloyroy555@gmail.com via Resend")
+        else:
+            print("   ⚠️  Email was not sent (check RESEND_API_KEY and server logs)")
     
     if failed == 0:
         print("\n🎉 ALL TESTS PASSED!")

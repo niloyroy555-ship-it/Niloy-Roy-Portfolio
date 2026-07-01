@@ -1,6 +1,70 @@
 import { MongoClient } from 'mongodb'
 import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
+import { Resend } from 'resend'
+
+export const runtime = 'nodejs'
+
+// Resend email client
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+
+function escapeHtml(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// Sends a nicely formatted contact email to the portfolio owner via Resend.
+async function sendContactEmail({ name, email, message }) {
+  if (!resend) return { sent: false, error: 'RESEND_API_KEY not configured' }
+  const recipient = process.env.CONTACT_RECIPIENT_EMAIL || 'niloyroy555@gmail.com'
+  const from = process.env.CONTACT_FROM_EMAIL || 'Portfolio Contact <onboarding@resend.dev>'
+
+  const safeName = escapeHtml(name)
+  const safeEmail = escapeHtml(email)
+  const safeMessage = escapeHtml(message).replace(/\n/g, '<br/>')
+
+  const html = `
+  <div style="margin:0;padding:24px;background:#0b0b0e;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#111114;border:1px solid #26262b;border-radius:16px;overflow:hidden;">
+      <div style="padding:22px 28px;background:linear-gradient(135deg,#3E63F5,#5B8CFF);">
+        <h1 style="margin:0;color:#fff;font-size:18px;letter-spacing:0.2px;">New portfolio enquiry</h1>
+        <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Someone reached out via niloyroy.com</p>
+      </div>
+      <div style="padding:28px;color:#e7e7ea;">
+        <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#8a8a92;">From</p>
+        <p style="margin:0 0 4px;font-size:18px;font-weight:600;color:#fff;">${safeName}</p>
+        <p style="margin:0 0 22px;font-size:14px;">
+          <a href="mailto:${safeEmail}" style="color:#5B8CFF;text-decoration:none;">${safeEmail}</a>
+        </p>
+        <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#8a8a92;">Message</p>
+        <div style="padding:16px 18px;background:#1a1a1f;border:1px solid #2b2b31;border-radius:12px;font-size:15px;line-height:1.65;color:#dcdce0;white-space:normal;">
+          ${safeMessage}
+        </div>
+        <a href="mailto:${safeEmail}?subject=Re:%20your%20message" style="display:inline-block;margin-top:24px;padding:12px 22px;background:#5B8CFF;color:#fff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">Reply to ${safeName}</a>
+      </div>
+      <div style="padding:16px 28px;border-top:1px solid #26262b;color:#6b6b73;font-size:12px;">
+        Sent automatically from your portfolio contact form.
+      </div>
+    </div>
+  </div>`
+
+  const text = `New portfolio enquiry\n\nFrom: ${name} <${email}>\n\nMessage:\n${message}`
+
+  const { data, error } = await resend.emails.send({
+    from,
+    to: [recipient],
+    replyTo: email,
+    subject: `New enquiry from ${name}`,
+    html,
+    text,
+  })
+  if (error) return { sent: false, error: error.message || 'Resend send failed' }
+  return { sent: true, id: data?.id }
+}
 
 // MongoDB connection
 let client
@@ -64,8 +128,19 @@ async function handleRoute(request, { params }) {
         createdAt: new Date(),
       }
       await db.collection('contacts').insertOne(contact)
+
+      // Email the enquiry to the portfolio owner (non-blocking for the user)
+      let emailed = false
+      try {
+        const result = await sendContactEmail(contact)
+        emailed = result.sent
+        if (!result.sent) console.error('Contact email not sent:', result.error)
+      } catch (e) {
+        console.error('Contact email error:', e?.message || e)
+      }
+
       const { _id, ...clean } = contact
-      return handleCORS(NextResponse.json({ success: true, contact: clean }))
+      return handleCORS(NextResponse.json({ success: true, emailed, contact: clean }))
     }
 
     // Contact list - GET /api/contact

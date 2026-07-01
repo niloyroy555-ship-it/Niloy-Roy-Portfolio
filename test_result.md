@@ -119,6 +119,9 @@ backend:
         -working: true
         -agent: "testing"
         -comment: "Backend testing complete. All 6 tests passed: (1) GET /api/root returns {message:'Hello World'} ✓ (2) POST /api/contact with valid data returns 200 with {success:true, contact:{id(UUID), name, email, message, createdAt}} and NO _id field ✓ (3) POST with missing field returns 400 with error ✓ (4) POST with empty strings returns 400 with error ✓ (5) GET /api/contact returns array with all required fields, NO _id, sorted by createdAt descending ✓ (6) Persistence verified - contact created via POST is retrievable via GET ✓. Contact API is fully functional."
+        -working: true
+        -agent: "testing"
+        -comment: "Resend email integration testing complete. All 6 tests passed: (1) GET /api/root sanity check ✓ (2) POST /api/contact with valid data {name:'Jane Client', email:'jane@example.com', message:'Hi Niloy, I would love to work with you on a brand film.'} returns HTTP 200 with {success:true, emailed:TRUE, contact:{id(UUID), name, email, message, createdAt}} and NO _id field ✓ (3) POST with missing field returns 400 with error ✓ (4) POST with empty strings returns 400 with error ✓ (5) GET /api/contact returns array sorted newest-first, no _id ✓ (6) Persistence verified ✓. RESEND EMAIL STATUS: emailed=true - email successfully sent to niloyroy555@gmail.com via Resend. Response time: 0.72s (acceptable). Server stable after Resend call. Contact API with Resend integration is fully functional."
 
 frontend:
   - task: "Portfolio landing experience (hero, particles, morphing role, marquee, portfolio grid, project modal, about, timeline, contact, footer)"
@@ -148,6 +151,10 @@ test_plan:
 
 agent_communication:
     -agent: "main"
-    -message: "Please test the backend contact API only. Endpoints: POST /api/contact with JSON {name,email,message} should return {success:true, contact:{...}} and persist to Mongo 'contacts' collection; missing fields should return 400. GET /api/contact should return an array of contacts (no _id). Do not test frontend."
+    -message: "Please test the backend contact API only. Endpoints: POST /api/contact with JSON {name,email,message} should return {success:true, emailed:<bool>, contact:{...}} and persist to Mongo 'contacts' collection; missing fields should return 400. GET /api/contact should return an array of contacts (no _id). Do not test frontend."
+    -agent: "main"
+    -message: "UPDATE: Added Resend email integration. POST /api/contact now ALSO emails the submission to niloyroy555@gmail.com via Resend (env: RESEND_API_KEY, CONTACT_RECIPIENT_EMAIL, CONTACT_FROM_EMAIL='Portfolio Contact <onboarding@resend.dev>'). Response now includes an 'emailed' boolean. Please re-test: (1) valid POST returns 200 with success:true and an 'emailed' field (true if Resend accepted; note Resend free/unverified domain can only deliver to the account owner's email, so 'emailed' may be true and delivery works to niloyroy555@gmail.com). (2) missing fields => 400. (3) persistence + GET still work. (4) Confirm no server crash and that a real Resend API call is attempted (check for 200 and emailed flag). Do NOT test frontend."
     -agent: "testing"
     -message: "Backend Contact API testing completed successfully. All 6 test cases passed including: root endpoint sanity check, POST with valid data (UUID id, no _id field), POST validation (missing fields & empty strings return 400), GET endpoint (array response, no _id, sorted descending), and persistence verification. The Contact API is fully functional and ready for production use."
+    -agent: "testing"
+    -message: "Resend email integration testing COMPLETED SUCCESSFULLY. All 6 tests passed. Key findings: (1) POST /api/contact returns HTTP 200 with 'emailed' field ✓ (2) emailed=TRUE - Resend API successfully sent email to niloyroy555@gmail.com ✓ (3) Response includes all required fields (success, emailed, contact with UUID id, no _id) ✓ (4) Validation working (400 for missing/empty fields) ✓ (5) Persistence and GET endpoint working ✓ (6) Server stable after Resend call, response time 0.72s (acceptable) ✓. Contact API with Resend integration is production-ready."
