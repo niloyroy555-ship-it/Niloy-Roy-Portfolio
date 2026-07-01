@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Check, Loader2, Mail, Phone } from 'lucide-react'
+import { Send, Check, Loader2, Mail, Phone, Instagram } from 'lucide-react'
 import { toast } from 'sonner'
 import { profile } from '@/lib/portfolio-data'
 import Magnetic from './magnetic'
@@ -95,7 +95,7 @@ export default function Contact() {
                   aria-label={s.label}
                   className="grid h-12 w-12 place-items-center rounded-full border border-white/12 text-sm font-medium text-white/80 transition-colors hover:border-brand hover:bg-brand hover:text-white"
                 >
-                  {s.short}
+                  {s.label === 'Instagram' ? <Instagram size={18} /> : s.short}
                 </a>
               </Magnetic>
             ))}
