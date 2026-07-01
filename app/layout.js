@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', display: 'swap', weight: ['400', '500', '600', '700'] })
 
 export const metadata = {
-  metadataBase: new URL('https://magic-studio-4.preview.emergentagent.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://magic-studio-4.preview.emergentagent.com'),
   title: 'Niloy Roy — AI Visual Designer, Motion Designer & Video Editor',
   description: 'Portfolio of Niloy Roy — AI Visual Designer, Creative Designer, Video Editor & Prompt Engineer. Cinematic brand creatives, motion design and photography for premium brands.',
   keywords: ['Niloy Roy', 'AI Visual Designer', 'Motion Designer', 'Video Editor', 'Graphic Designer', 'Prompt Engineer', 'Portfolio', 'Kolkata'],

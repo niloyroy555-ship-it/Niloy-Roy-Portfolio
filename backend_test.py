@@ -6,10 +6,11 @@ Tests the Contact form endpoints: POST /api/contact and GET /api/contact
 
 import requests
 import json
+import os
 from datetime import datetime
 
 # Base URL from environment
-BASE_URL = "https://magic-studio-4.preview.emergentagent.com/api"
+BASE_URL = os.environ.get('NEXT_PUBLIC_BASE_URL', 'https://magic-studio-4.preview.emergentagent.com').rstrip('/') + '/api'
 
 def test_root_endpoint():
     """Test GET /api/root - sanity check"""
