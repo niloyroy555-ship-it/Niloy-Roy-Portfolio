@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Regression test for Contact API after production bugfix.
-Tests the hardened /api/contact route that now:
-- Validates MONGO_URL before connecting
-- Saves to DB and emails INDEPENDENTLY (each in try/catch)
-- Returns success if EITHER works, 503 only if BOTH fail
+Test suite for Contact API - Email-Only Implementation (NO MongoDB)
+Tests the /api/contact route that now:
+- Sends email ONLY via Resend (no database at all)
+- Returns contact object with UUID but doesn't save to DB
+- GET /api/contact and /api/status endpoints were intentionally REMOVED (404 expected)
 """
 
 import requests
@@ -16,9 +16,9 @@ from datetime import datetime
 BASE_URL = "https://magic-studio-4.preview.emergentagent.com/api"
 
 def test_1_get_root():
-    """Test 1: GET /api/root should return {message:'Hello World'} even though top-level DB connect was removed"""
+    """Test 1: GET /api/root should return {message:'Hello World'}"""
     print("\n" + "="*80)
-    print("TEST 1: GET /api/root (sanity check - non-DB route)")
+    print("TEST 1: GET /api/root (sanity check)")
     print("="*80)
     try:
         start = time.time()
@@ -41,15 +41,15 @@ def test_1_get_root():
         return False
 
 def test_2_post_contact_valid():
-    """Test 2: POST /api/contact with valid data should return 200 with success:true, saved:true, emailed:true"""
+    """Test 2: POST /api/contact with valid data should return 200 with success:true, emailed:true"""
     print("\n" + "="*80)
-    print("TEST 2: POST /api/contact with valid data (regression test after bugfix)")
+    print("TEST 2: POST /api/contact with valid data (email-only, no MongoDB)")
     print("="*80)
     try:
         payload = {
-            "name": "Prod Fix",
-            "email": "prodfix@example.com",
-            "message": "Testing the hardened contact route after the startsWith bugfix."
+            "name": "Email Only",
+            "email": "emailonly@example.com",
+            "message": "Testing the email-only contact form with no MongoDB."
         }
         
         print(f"Payload: {json.dumps(payload, indent=2)}")
@@ -73,16 +73,16 @@ def test_2_post_contact_valid():
         
         # Check response structure
         assert data.get("success") == True, f"Expected success:true, got {data.get('success')}"
-        assert "saved" in data, "Response missing 'saved' field"
         assert "emailed" in data, "Response missing 'emailed' field"
         assert "contact" in data, "Response missing 'contact' field"
         
-        # Check saved and emailed flags (both should be true in PREVIEW environment)
+        # Check that there's NO "saved" field (since we're not using MongoDB)
+        assert "saved" not in data, "Response should NOT have 'saved' field (no MongoDB)"
+        
+        # Check emailed flag
         print(f"\n📊 Delivery Status:")
-        print(f"   - saved: {data.get('saved')}")
         print(f"   - emailed: {data.get('emailed')}")
         
-        assert data.get("saved") == True, f"Expected saved:true, got {data.get('saved')}"
         assert data.get("emailed") == True, f"Expected emailed:true, got {data.get('emailed')}"
         
         # Check contact object
@@ -105,21 +105,19 @@ def test_2_post_contact_valid():
         print(f"   - message: {contact.get('message')[:50]}...")
         print(f"   - createdAt: {contact.get('createdAt')}")
         print(f"   - NO _id field ✓")
+        print(f"   - NO saved field ✓ (email-only, no DB)")
         
         assert elapsed < 10, f"Response time too slow: {elapsed:.2f}s"
         
         print("\n✅ TEST 2 PASSED: POST /api/contact with valid data works correctly")
         print("   - HTTP 200 ✓")
         print("   - success: true ✓")
-        print("   - saved: true ✓")
         print("   - emailed: true ✓")
         print("   - contact object with UUID id ✓")
         print("   - NO _id field ✓")
+        print("   - NO saved field ✓")
         print("   - Response time acceptable ✓")
-        
-        # Store contact_id for later tests
-        global CREATED_CONTACT_ID
-        CREATED_CONTACT_ID = contact_id
+        print("   - Resend email was accepted ✓")
         
         return True
     except Exception as e:
@@ -127,9 +125,9 @@ def test_2_post_contact_valid():
         return False
 
 def test_3_post_contact_missing_field():
-    """Test 3: POST /api/contact with missing field should return 400"""
+    """Test 3: POST /api/contact with missing field should return 400 with specific error"""
     print("\n" + "="*80)
-    print("TEST 3: POST /api/contact with missing field (validation)")
+    print("TEST 3: POST /api/contact with missing field (omit message)")
     print("="*80)
     try:
         payload = {
@@ -155,7 +153,11 @@ def test_3_post_contact_missing_field():
         data = response.json()
         assert "error" in data, "Response should contain 'error' field"
         
-        print(f"✅ Error message: {data.get('error')}")
+        error_msg = data.get("error")
+        expected_error = "name, email and message are required"
+        assert error_msg == expected_error, f"Expected error '{expected_error}', got '{error_msg}'"
+        
+        print(f"✅ Error message: {error_msg}")
         print("✅ TEST 3 PASSED: Missing field validation works correctly")
         return True
     except Exception as e:
@@ -193,129 +195,140 @@ def test_4_post_contact_malformed_json():
         print(f"❌ TEST 4 FAILED: {str(e)}")
         return False
 
-def test_5_get_contacts():
-    """Test 5: GET /api/contact should return array, no _id, newest first"""
+def test_5_get_contact_removed():
+    """Test 5: GET /api/contact should return 404 (endpoint intentionally removed)"""
     print("\n" + "="*80)
-    print("TEST 5: GET /api/contact (list contacts)")
+    print("TEST 5: GET /api/contact (should return 404 - endpoint removed)")
     print("="*80)
     try:
         response = requests.get(f"{BASE_URL}/contact", timeout=10)
         
         print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.text}")
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        assert response.status_code == 404, f"Expected 404, got {response.status_code}"
         
         data = response.json()
-        assert isinstance(data, list), f"Expected array, got {type(data)}"
+        assert "error" in data, "Response should contain 'error' field"
         
-        print(f"✅ Returned {len(data)} contacts")
-        
-        if len(data) > 0:
-            # Check first contact (should be newest)
-            first_contact = data[0]
-            print(f"\n📋 First contact (newest):")
-            print(f"   - id: {first_contact.get('id')}")
-            print(f"   - name: {first_contact.get('name')}")
-            print(f"   - email: {first_contact.get('email')}")
-            print(f"   - createdAt: {first_contact.get('createdAt')}")
-            
-            # Verify no _id field
-            assert "_id" not in first_contact, "Contact should NOT have '_id' field"
-            print(f"   - NO _id field ✓")
-            
-            # Verify required fields
-            assert "id" in first_contact, "Contact missing 'id' field"
-            assert "name" in first_contact, "Contact missing 'name' field"
-            assert "email" in first_contact, "Contact missing 'email' field"
-            assert "message" in first_contact, "Contact missing 'message' field"
-            assert "createdAt" in first_contact, "Contact missing 'createdAt' field"
-            
-            # Verify sorting (newest first)
-            if len(data) > 1:
-                first_date = first_contact.get("createdAt")
-                second_date = data[1].get("createdAt")
-                print(f"\n📅 Sorting check:")
-                print(f"   - First: {first_date}")
-                print(f"   - Second: {second_date}")
-                # Note: Dates are ISO strings, can compare lexicographically
-                assert first_date >= second_date, "Contacts not sorted by createdAt descending"
-                print(f"   - Sorted newest first ✓")
-        
-        print("\n✅ TEST 5 PASSED: GET /api/contact works correctly")
-        print("   - HTTP 200 ✓")
-        print("   - Returns array ✓")
-        print("   - NO _id field ✓")
-        print("   - Sorted newest first ✓")
+        print(f"✅ Error message: {data.get('error')}")
+        print("✅ TEST 5 PASSED: GET /api/contact correctly returns 404 (endpoint removed as expected)")
         return True
     except Exception as e:
         print(f"❌ TEST 5 FAILED: {str(e)}")
         return False
 
-def test_6_persistence_verification():
-    """Test 6: Verify the contact created in Test 2 is retrievable via GET"""
+def test_6_get_status_removed():
+    """Test 6: GET /api/status should return 404 (endpoint intentionally removed)"""
     print("\n" + "="*80)
-    print("TEST 6: Persistence verification (contact from Test 2 should be in GET)")
+    print("TEST 6: GET /api/status (should return 404 - endpoint removed)")
     print("="*80)
     try:
-        if not CREATED_CONTACT_ID:
-            print("⚠️  Skipping: No contact ID from Test 2")
-            return True
+        response = requests.get(f"{BASE_URL}/status", timeout=10)
         
-        response = requests.get(f"{BASE_URL}/contact", timeout=10)
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.text}")
         
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        assert response.status_code == 404, f"Expected 404, got {response.status_code}"
         
-        contacts = response.json()
+        data = response.json()
+        assert "error" in data, "Response should contain 'error' field"
         
-        # Find the contact we created
-        found = False
-        for contact in contacts:
-            if contact.get("id") == CREATED_CONTACT_ID:
-                found = True
-                print(f"✅ Found contact with id: {CREATED_CONTACT_ID}")
-                print(f"   - name: {contact.get('name')}")
-                print(f"   - email: {contact.get('email')}")
-                print(f"   - message: {contact.get('message')[:50]}...")
-                break
-        
-        assert found, f"Contact with id {CREATED_CONTACT_ID} not found in GET response"
-        
-        print("\n✅ TEST 6 PASSED: Persistence verified")
+        print(f"✅ Error message: {data.get('error')}")
+        print("✅ TEST 6 PASSED: GET /api/status correctly returns 404 (endpoint removed as expected)")
         return True
     except Exception as e:
         print(f"❌ TEST 6 FAILED: {str(e)}")
         return False
 
-def run_all_tests():
-    """Run all regression tests"""
+def test_7_no_mongodb_errors():
+    """Test 7: Verify no MongoDB connection errors in responses"""
     print("\n" + "="*80)
-    print("CONTACT API REGRESSION TEST SUITE")
-    print("After production bugfix: MONGO_URL validation + independent DB/email")
+    print("TEST 7: Verify NO MongoDB connections/errors")
+    print("="*80)
+    try:
+        # Make a few requests and check for MongoDB-related errors
+        print("Making multiple requests to check for MongoDB errors...")
+        
+        # Test GET /api/root
+        response1 = requests.get(f"{BASE_URL}/root", timeout=10)
+        assert response1.status_code == 200, "GET /api/root failed"
+        data1 = response1.json()
+        # Check for MongoDB error patterns (not in user-submitted data)
+        assert "error" not in data1 or "mongo" not in str(data1.get("error", "")).lower(), "MongoDB error found"
+        
+        # Test POST /api/contact
+        payload = {
+            "name": "Clean Test",
+            "email": "cleantest@example.com",
+            "message": "Testing API without database dependencies"
+        }
+        response2 = requests.post(
+            f"{BASE_URL}/contact",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=15
+        )
+        assert response2.status_code == 200, "POST /api/contact failed"
+        data2 = response2.json()
+        # Check that response doesn't contain MongoDB error fields
+        assert "error" not in data2, "Error field found in successful response"
+        assert data2.get("success") == True, "Success should be true"
+        assert data2.get("emailed") == True, "Emailed should be true"
+        
+        # Test GET /api/contact (should 404, not MongoDB error)
+        response3 = requests.get(f"{BASE_URL}/contact", timeout=10)
+        assert response3.status_code == 404, "GET /api/contact should return 404"
+        data3 = response3.json()
+        error_msg = data3.get("error", "").lower()
+        # Should be a route not found error, not a MongoDB error
+        assert "route" in error_msg and "not found" in error_msg, "Should be route not found error"
+        assert "mongo" not in error_msg, "MongoDB reference in error message"
+        assert "database" not in error_msg, "Database reference in error message"
+        assert "connection" not in error_msg, "Connection error in message"
+        
+        print("✅ No MongoDB connections or errors detected")
+        print("✅ All responses are clean (no MongoDB errors)")
+        print("✅ All errors are route-level, not database-level")
+        print("✅ TEST 7 PASSED: Confirmed NO MongoDB usage")
+        return True
+    except Exception as e:
+        print(f"❌ TEST 7 FAILED: {str(e)}")
+        return False
+
+def run_all_tests():
+    """Run all tests for email-only Contact API"""
+    print("\n" + "="*80)
+    print("CONTACT API TEST SUITE - EMAIL-ONLY (NO MongoDB)")
+    print("Testing /api/contact route with Resend email integration only")
     print("="*80)
     
     results = []
     
-    # Test 5: GET /api/root (sanity check)
+    # Test 1: GET /api/root (sanity check)
     results.append(("GET /api/root", test_1_get_root()))
     
-    # Test 1: Valid POST
+    # Test 2: Valid POST
     results.append(("POST /api/contact (valid)", test_2_post_contact_valid()))
     
-    # Test 2: Missing field
+    # Test 3: Missing field
     results.append(("POST /api/contact (missing field)", test_3_post_contact_missing_field()))
     
-    # Test 3: Malformed JSON
+    # Test 4: Malformed JSON
     results.append(("POST /api/contact (malformed JSON)", test_4_post_contact_malformed_json()))
     
-    # Test 4: GET contacts
-    results.append(("GET /api/contact", test_5_get_contacts()))
+    # Test 5: GET /api/contact (should 404)
+    results.append(("GET /api/contact (404 expected)", test_5_get_contact_removed()))
     
-    # Test 6: Persistence
-    results.append(("Persistence verification", test_6_persistence_verification()))
+    # Test 6: GET /api/status (should 404)
+    results.append(("GET /api/status (404 expected)", test_6_get_status_removed()))
+    
+    # Test 7: No MongoDB errors
+    results.append(("No MongoDB errors", test_7_no_mongodb_errors()))
     
     # Summary
     print("\n" + "="*80)
-    print("REGRESSION TEST SUMMARY")
+    print("TEST SUMMARY")
     print("="*80)
     
     passed = sum(1 for _, result in results if result)
@@ -330,14 +343,13 @@ def run_all_tests():
     print(f"{'='*80}")
     
     if passed == total:
-        print("\n🎉 ALL REGRESSION TESTS PASSED!")
-        print("The Contact API is working correctly after the production bugfix.")
+        print("\n🎉 ALL TESTS PASSED!")
+        print("The Contact API (email-only, no MongoDB) is working correctly.")
         return True
     else:
         print(f"\n⚠️  {total - passed} test(s) failed")
         return False
 
 if __name__ == "__main__":
-    CREATED_CONTACT_ID = None
     success = run_all_tests()
     exit(0 if success else 1)
