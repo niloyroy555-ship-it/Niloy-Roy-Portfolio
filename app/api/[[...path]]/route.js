@@ -71,10 +71,14 @@ let client
 let db
 
 async function connectToMongo() {
+  if (!process.env.MONGO_URL) {
+    // Fail clearly instead of letting the driver crash on `undefined.startsWith(...)`
+    throw new Error('MONGO_URL environment variable is not set')
+  }
   if (!client) {
     client = new MongoClient(process.env.MONGO_URL)
     await client.connect()
-    db = client.db(process.env.DB_NAME)
+    db = client.db(process.env.DB_NAME || 'portfolio')
   }
   return db
 }
@@ -100,8 +104,6 @@ async function handleRoute(request, { params }) {
   const method = request.method
 
   try {
-    const db = await connectToMongo()
-
     // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
     if (route === '/root' && method === 'GET') {
       return handleCORS(NextResponse.json({ message: "Hello World" }))
@@ -113,23 +115,29 @@ async function handleRoute(request, { params }) {
 
     // Contact form - POST /api/contact
     if (route === '/contact' && method === 'POST') {
-      const body = await request.json()
-      if (!body.name || !body.email || !body.message) {
+      const body = await request.json().catch(() => ({}))
+      const name = String(body?.name || '').trim().slice(0, 200)
+      const email = String(body?.email || '').trim().slice(0, 200)
+      const message = String(body?.message || '').trim().slice(0, 4000)
+      if (!name || !email || !message) {
         return handleCORS(NextResponse.json(
           { error: "name, email and message are required" },
           { status: 400 }
         ))
       }
-      const contact = {
-        id: uuidv4(),
-        name: String(body.name).slice(0, 200),
-        email: String(body.email).slice(0, 200),
-        message: String(body.message).slice(0, 4000),
-        createdAt: new Date(),
-      }
-      await db.collection('contacts').insertOne(contact)
+      const contact = { id: uuidv4(), name, email, message, createdAt: new Date() }
 
-      // Email the enquiry to the portfolio owner (non-blocking for the user)
+      // 1) Persist to MongoDB (non-fatal if DB/env is unavailable)
+      let saved = false
+      try {
+        const db = await connectToMongo()
+        await db.collection('contacts').insertOne({ ...contact })
+        saved = true
+      } catch (e) {
+        console.error('Contact DB save failed:', e?.message || e)
+      }
+
+      // 2) Email the enquiry to the portfolio owner (non-fatal if RESEND env is missing)
       let emailed = false
       try {
         const result = await sendContactEmail(contact)
@@ -139,12 +147,20 @@ async function handleRoute(request, { params }) {
         console.error('Contact email error:', e?.message || e)
       }
 
-      const { _id, ...clean } = contact
-      return handleCORS(NextResponse.json({ success: true, emailed, contact: clean }))
+      // If neither channel worked, the message would be lost — report a clear error.
+      if (!saved && !emailed) {
+        return handleCORS(NextResponse.json(
+          { success: false, error: 'Message could not be delivered. Email and database are not configured on the server.' },
+          { status: 503 }
+        ))
+      }
+
+      return handleCORS(NextResponse.json({ success: true, emailed, saved, contact }))
     }
 
     // Contact list - GET /api/contact
     if (route === '/contact' && method === 'GET') {
+      const db = await connectToMongo()
       const contacts = await db.collection('contacts')
         .find({})
         .sort({ createdAt: -1 })
@@ -156,6 +172,7 @@ async function handleRoute(request, { params }) {
 
     // Status endpoints - POST /api/status
     if (route === '/status' && method === 'POST') {
+      const db = await connectToMongo()
       const body = await request.json()
       
       if (!body.client_name) {
@@ -177,6 +194,7 @@ async function handleRoute(request, { params }) {
 
     // Status endpoints - GET /api/status
     if (route === '/status' && method === 'GET') {
+      const db = await connectToMongo()
       const statusChecks = await db.collection('status_checks')
         .find({})
         .limit(1000)
@@ -196,8 +214,16 @@ async function handleRoute(request, { params }) {
 
   } catch (error) {
     console.error('API Error:', error)
+    const msg = error?.message || String(error)
+    // Surface configuration problems (missing env vars) clearly instead of a generic 500.
+    if (/MONGO_URL|environment variable|startsWith/i.test(msg)) {
+      return handleCORS(NextResponse.json(
+        { error: "Server is not fully configured. A required environment variable is missing.", detail: msg },
+        { status: 503 }
+      ))
+    }
     return handleCORS(NextResponse.json(
-      { error: "Internal server error" }, 
+      { error: "Internal server error" },
       { status: 500 }
     ))
   }
