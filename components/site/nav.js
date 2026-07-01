@@ -39,7 +39,10 @@ export default function Nav() {
       <div className={`mx-auto flex max-w-7xl items-center justify-between px-5 py-4 transition-all duration-500 md:px-8 ${scrolled ? 'mt-2 md:mt-3' : ''}`}>
         <div className={`flex w-full items-center justify-between rounded-full px-4 py-2.5 transition-all duration-500 md:px-5 ${scrolled ? 'glass' : ''}`}>
           <button onClick={() => go('#top')} data-cursor="link" className="group flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[13px] font-bold text-ink-950 transition-transform duration-500 group-hover:rotate-[360deg]">NR</span>
+            <span className="block h-8 w-8 overflow-hidden rounded-full ring-1 ring-white/25 transition-transform duration-700 group-hover:rotate-[360deg]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/portrait.jpg" alt="Niloy Roy" className="h-full w-full object-cover object-top" />
+            </span>
             <span className="text-sm font-medium tracking-tight text-white/90">Niloy Roy</span>
           </button>
 

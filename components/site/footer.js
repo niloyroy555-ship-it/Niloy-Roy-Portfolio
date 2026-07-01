@@ -15,7 +15,10 @@ export default function Footer() {
     >
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
         <button onClick={() => scrollToId('#top')} data-cursor="link" className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[13px] font-bold text-ink-950">NR</span>
+          <span className="block h-8 w-8 overflow-hidden rounded-full ring-1 ring-white/25">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/portrait.jpg" alt="Niloy Roy" className="h-full w-full object-cover object-top" />
+        </span>
           <span className="text-sm font-medium text-white/80">{profile.name}</span>
         </button>
         <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-white/45">

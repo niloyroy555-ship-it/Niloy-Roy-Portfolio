@@ -20,6 +20,7 @@ module.exports = {
         fontFamily: {
           sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
           display: ['var(--font-grotesk)', 'var(--font-inter)', 'sans-serif'],
+          graffiti: ['var(--font-graffiti)', 'var(--font-grotesk)', 'cursive'],
         },
         colors: {
           brand: {
