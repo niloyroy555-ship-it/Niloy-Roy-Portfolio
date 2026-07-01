@@ -69,6 +69,7 @@ export default function ProjectModal({ project, onClose }) {
       {project && (
         <motion.div
           className="fixed inset-0 z-[90] overflow-y-auto"
+          data-lenis-prevent
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
