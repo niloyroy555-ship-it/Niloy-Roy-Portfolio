@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { profile, skills } from '@/lib/portfolio-data'
 import { Reveal, TextReveal } from './reveal'
+import RevealMedia from './reveal-media'
 
 function Counter({ value, suffix }) {
   const ref = useRef(null)
@@ -45,12 +46,10 @@ export default function About() {
         <Reveal>
           <div className="relative">
             <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <RevealMedia
+                type="image"
                 src="/portrait.jpg"
                 alt="Niloy Roy portrait"
-                loading="lazy"
-                decoding="async"
                 className="h-full w-full scale-[1.03] object-cover object-top grayscale transition-all duration-700 ease-out group-hover:scale-100 group-hover:grayscale-0"
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/75 via-transparent to-transparent" />

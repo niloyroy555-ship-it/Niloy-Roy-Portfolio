@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import RevealMedia from './reveal-media'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -10,19 +11,25 @@ function GalleryItem({ src, i }) {
   const isVideo = src.endsWith('.mp4')
   const poster = isVideo ? src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg') : undefined
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 + i * 0.06, duration: 0.7, ease }}
-      className="overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02]"
-    >
+    <div className="overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02]">
       {isVideo ? (
-        <video src={src} poster={poster} controls muted loop playsInline preload="metadata" className="h-full w-full object-cover" />
+        <RevealMedia
+          type="video"
+          src={src}
+          poster={poster}
+          delay={(i % 2) * 0.08}
+          className="h-full w-full object-cover"
+          videoProps={{ controls: true, muted: true, loop: true, playsInline: true, preload: 'metadata' }}
+        />
       ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
+        <RevealMedia
+          type="image"
+          src={src}
+          delay={(i % 2) * 0.08}
+          className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+        />
       )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -92,10 +99,15 @@ export default function ProjectModal({ project, onClose }) {
             {/* Hero media */}
             <div className="relative aspect-[16/9] w-full overflow-hidden">
               {heroIsVideo ? (
-                <video src={project.cover} poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                <RevealMedia
+                  type="video"
+                  src={project.cover}
+                  poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
+                  className="h-full w-full object-cover"
+                  videoProps={{ autoPlay: true, muted: true, loop: true, playsInline: true }}
+                />
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={project.cover} alt={project.title} className="h-full w-full object-cover" />
+                <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0E] via-[#0B0B0E]/20 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">

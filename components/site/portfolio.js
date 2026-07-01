@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'fram
 import { ArrowUpRight } from 'lucide-react'
 import { projects } from '@/lib/portfolio-data'
 import { Reveal, TextReveal } from './reveal'
+import RevealMedia from './reveal-media'
 
 function posterFor(src) {
   return src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')
@@ -13,20 +14,16 @@ function posterFor(src) {
 function Media({ project, className }) {
   if (project.type === 'video') {
     return (
-      <video
-        className={className}
+      <RevealMedia
+        type="video"
         src={project.cover}
         poster={posterFor(project.cover)}
-        muted
-        loop
-        playsInline
-        autoPlay
-        preload="metadata"
+        className={className}
+        videoProps={{ muted: true, loop: true, playsInline: true, autoPlay: true, preload: 'metadata' }}
       />
     )
   }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={project.cover} alt={project.title} loading="lazy" decoding="async" className={className} />
+  return <RevealMedia type="image" src={project.cover} alt={project.title} className={className} />
 }
 
 function ProjectCard({ project, index, onOpen }) {
