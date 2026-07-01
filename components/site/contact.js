@@ -59,6 +59,20 @@ export default function Contact() {
             </p>
           </Reveal>
 
+          <Reveal delay={0.25}>
+            <div className="mt-8 flex items-center gap-3">
+              <span className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/portrait.jpg" alt="Niloy Roy" className="h-12 w-12 rounded-full object-cover object-top ring-2 ring-white/15" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-ink-950 bg-emerald-400" />
+              </span>
+              <div>
+                <p className="text-sm font-medium text-white/90">Niloy Roy</p>
+                <p className="text-xs text-emerald-400/90">Available for new projects</p>
+              </div>
+            </div>
+          </Reveal>
+
           <div className="mt-10 space-y-3">
             <a href={`mailto:${profile.email}`} data-cursor="link" className="flex items-center gap-3 text-white/70 transition-colors hover:text-white">
               <span className="grid h-10 w-10 place-items-center rounded-full glass"><Mail size={17} /></span>

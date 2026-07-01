@@ -18,19 +18,19 @@ export function Reveal({ children, className = '', delay = 0, y = 28, once = tru
   )
 }
 
-// Word-by-word reveal for headlines
+// Word-by-word reveal for headlines (opacity + pixel rise inside an overflow mask)
 export function TextReveal({ text, className = '', wordClass = '', delay = 0, stagger = 0.05 }) {
   const words = String(text).split(' ')
   return (
     <span className={className} aria-label={text}>
       {words.map((w, i) => (
-        <span key={i} className="inline-block overflow-hidden align-bottom" style={{ paddingBottom: '0.08em' }}>
+        <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom">
           <motion.span
             className={`inline-block ${wordClass}`}
-            initial={{ y: '110%' }}
-            whileInView={{ y: '0%' }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.85, ease, delay: delay + i * stagger }}
+            initial={{ y: 44, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.8, ease, delay: delay + i * stagger }}
           >
             {w}
             {i < words.length - 1 ? '\u00A0' : ''}

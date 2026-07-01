@@ -15,7 +15,7 @@ export const metadata = {
     title: 'Niloy Roy — AI Visual Designer & Motion Designer',
     description: 'Cinematic brand creatives, motion design and photography for premium brands.',
     type: 'website',
-    images: ['/works/creatives/creative-1.jpg'],
+    images: ['/portrait.jpg'],
   },
   robots: { index: true, follow: true },
 }

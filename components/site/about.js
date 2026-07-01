@@ -44,13 +44,19 @@ export default function About() {
         {/* Portrait placeholder */}
         <Reveal>
           <div className="relative">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 glass">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand/25 via-transparent to-indigo-500/10" />
-              <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/30 blur-3xl animate-float" />
-              <div className="absolute inset-0 grid place-items-center">
-                <span className="font-display text-[7rem] font-bold text-white/90">NR</span>
-              </div>
-              <span className="absolute bottom-5 left-5 rounded-full glass px-3 py-1 text-xs text-white/60">Portrait · {profile.location}</span>
+            <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/portrait.jpg"
+                alt="Niloy Roy portrait"
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full scale-[1.03] object-cover object-top grayscale transition-all duration-700 ease-out group-hover:scale-100 group-hover:grayscale-0"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/75 via-transparent to-transparent" />
+              <div className="pointer-events-none absolute inset-0 bg-brand/15 opacity-0 mix-blend-overlay transition-opacity duration-700 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/10" />
+              <span className="absolute bottom-5 left-5 rounded-full glass px-3 py-1 text-xs text-white/70">Niloy Roy · {profile.location}</span>
             </div>
             <div className="absolute -bottom-5 -right-5 hidden rounded-2xl glass px-5 py-4 md:block">
               <p className="font-display text-3xl font-bold text-white">5+</p>
