@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 
 export default function CustomCursor() {
-  // --- Desktop cursor state (existing) ---
+  // Desktop cursor state (existing)
   const [enabled, setEnabled] = useState(false)
   const [variant, setVariant] = useState('default')
   const [label, setLabel] = useState('')
   const [down, setDown] = useState(false)
 
-  // --- Touch / Mobile cursor state ---
+  // Touch / Mobile cursor state
   const [touchEnabled, setTouchEnabled] = useState(false)
   const [touchActive, setTouchActive] = useState(false)
   const [touchVisible, setTouchVisible] = useState(false)
@@ -58,7 +58,6 @@ export default function CustomCursor() {
       window.removeEventListener('mouseup', up)
       document.documentElement.classList.remove('cursor-none-desktop')
     }
-    // keep x,y in deps so springs update correctly when they change identity
   }, [x, y])
 
   // --- Touch: mobile cursor implementation ---
@@ -119,7 +118,8 @@ export default function CustomCursor() {
       setTouchActive(false)
       setTouchVisible(false)
     }
-  }, [x, y])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!enabled && !touchEnabled) return null
 
@@ -127,16 +127,18 @@ export default function CustomCursor() {
   const isLink = variant === 'link' || variant === 'view' || variant === 'open'
   const ringSize = isLabel ? 78 : isLink ? 54 : 32
 
-  // --- Trail springs (stable across renders) ---
-  const TRAIL_COUNT = 4
-  const trailXs = []
-  const trailYs = []
-  for (let i = 0; i < TRAIL_COUNT; i++) {
-    const stiffness = 600 - i * 120
-    const damping = 45 - i * 6
-    trailXs.push(useSpring(x, { stiffness, damping }))
-    trailYs.push(useSpring(y, { stiffness, damping }))
-  }
+  // --- Trail springs (explicit top-level hooks to respect rules of hooks) ---
+  const trail0X = useSpring(x, { stiffness: 600, damping: 45 })
+  const trail0Y = useSpring(y, { stiffness: 600, damping: 45 })
+  const trail1X = useSpring(x, { stiffness: 480, damping: 39 })
+  const trail1Y = useSpring(y, { stiffness: 480, damping: 39 })
+  const trail2X = useSpring(x, { stiffness: 360, damping: 33 })
+  const trail2Y = useSpring(y, { stiffness: 360, damping: 33 })
+  const trail3X = useSpring(x, { stiffness: 240, damping: 27 })
+  const trail3Y = useSpring(y, { stiffness: 240, damping: 27 })
+
+  const trailXs = [trail0X, trail1X, trail2X, trail3X]
+  const trailYs = [trail0Y, trail1Y, trail2Y, trail3Y]
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[100]" aria-hidden>
@@ -167,7 +169,7 @@ export default function CustomCursor() {
         </div>
       )}
 
-      {/* Touch cursor: only on small screens, only when active */}
+      {/* Touch cursor: only on small screens, only when active/visible */}
       {touchEnabled && touchVisible && (
         <div className="md:hidden fixed inset-0 pointer-events-none">
           {/* Particle / glow trail */}
