@@ -40,9 +40,9 @@ export default function RevealMedia({
     <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
       <motion.div
         className="h-full w-full"
-        initial={{ scale: 1.08, opacity: 0 }}
-        animate={show ? { scale: 1, opacity: 1 } : {}}
-        transition={{ duration: 0.9, ease, delay }}
+        initial={{ opacity: 0 }}
+animate={show ? { opacity: 1 } : {}}
+transition={{ duration: 0.25, ease, delay }}
         style={{ willChange: 'transform, opacity' }}
       >
         {type === 'video' ? (
@@ -61,7 +61,8 @@ export default function RevealMedia({
             ref={mediaRef}
             src={src}
             alt={alt}
-            loading="lazy"
+            loading="eager"
+fetchPriority="high"
             decoding="async"
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(true)}
@@ -75,9 +76,9 @@ export default function RevealMedia({
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-ink-950"
         style={{ transformOrigin: 'bottom', willChange: 'transform' }}
-        initial={{ scaleY: 1 }}
-        animate={show ? { scaleY: 0 } : {}}
-        transition={{ duration: 0.85, ease: curtainEase, delay: delay + 0.05 }}
+        initial={false}
+animate={{ scaleY: 0 }}
+transition={{ duration: 0.2 }}
       />
     </div>
   )
