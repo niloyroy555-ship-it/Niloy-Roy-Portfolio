@@ -14,6 +14,7 @@ export const metadata = {
   keywords: ['Niloy Roy', 'AI Visual Designer', 'Motion Designer', 'Video Editor', 'Graphic Designer', 'Prompt Engineer', 'Portfolio', 'Kolkata'],
   authors: [{ name: 'Niloy Roy' }],
   openGraph: {
+  url: 'https://niloy-roy-portfolio.vercel.app',
   title: 'Niloy Roy — AI Visual Designer & Motion Designer',
   description: 'Cinematic brand creatives, motion design and photography for premium brands.',
   type: 'website',
