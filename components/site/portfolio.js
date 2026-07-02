@@ -33,17 +33,17 @@ function ProjectCard({ project, index, onOpen }) {
   const srx = useSpring(rx, { stiffness: 150, damping: 18 })
   const sry = useSpring(ry, { stiffness: 150, damping: 18 })
 
-  // const { scrollYProgress } = useScroll({
-//   target: ref,
-//   offset: ['start end', 'end start']
-// })
+ const { scrollYProgress } = useScroll({
+  target: ref,
+  offset: ['start end', 'end start']
+})
 
-// const y = useTransform(
-//   scrollYProgress,
-//   [0,1],
-//   [index % 2 ? 60 : 28,
-//    index % 2 ? -60 : -28]
-// )
+const y = useTransform(
+  scrollYProgress,
+  [0,1],
+  [index % 2 ? 60 : 28,
+   index % 2 ? -60 : -28]
+)
 
   const onMove = (e) => {
     const rect = ref.current?.getBoundingClientRect()
