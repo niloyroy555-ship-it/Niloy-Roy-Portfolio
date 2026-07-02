@@ -7,7 +7,6 @@ const ease = [0.22, 1, 0.36, 1]
 const curtainEase = [0.85, 0, 0.15, 1]
 
 // Cinematic media reveal: scale + blur-out with a curtain wipe, on enter-view + load.
-// Optimized for smooth 60fps performance
 export default function RevealMedia({
   src,
   type = 'image',
@@ -32,7 +31,7 @@ export default function RevealMedia({
       if (type === 'video' && el.readyState >= 2) setLoaded(true)
     }
     // Safety net: never leave media hidden behind the curtain.
-    const t = setTimeout(() => setLoaded(true), 800)
+    const t = setTimeout(() => setLoaded(true), 1200)
     return () => clearTimeout(t)
   }, [type, src])
 
@@ -40,10 +39,9 @@ export default function RevealMedia({
     <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
       <motion.div
         className="h-full w-full"
-        initial={{ opacity: 0 }}
-animate={show ? { opacity: 1 } : {}}
-transition={{ duration: 0.25, ease, delay }}
-        style={{ willChange: 'transform, opacity' }}
+        initial={{ scale: 1.14, opacity: 0, filter: 'blur(16px)' }}
+        animate={show ? { scale: 1, opacity: 1, filter: 'blur(0px)' } : {}}
+        transition={{ duration: 1.15, ease, delay }}
       >
         {type === 'video' ? (
           <video
@@ -61,8 +59,7 @@ transition={{ duration: 0.25, ease, delay }}
             ref={mediaRef}
             src={src}
             alt={alt}
-            loading="eager"
-fetchPriority="high"
+            loading="lazy"
             decoding="async"
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(true)}
@@ -71,14 +68,14 @@ fetchPriority="high"
         )}
       </motion.div>
 
-      {/* curtain wipe - optimized for GPU acceleration */}
+      {/* curtain wipe */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-ink-950"
-        style={{ transformOrigin: 'bottom', willChange: 'transform' }}
-        initial={false}
-animate={{ scaleY: 0 }}
-transition={{ duration: 0.2 }}
+        style={{ transformOrigin: 'bottom' }}
+        initial={{ scaleY: 1 }}
+        animate={show ? { scaleY: 0 } : {}}
+        transition={{ duration: 0.95, ease: curtainEase, delay: delay + 0.05 }}
       />
     </div>
   )
