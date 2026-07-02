@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Toaster } from 'sonner'
-import SmoothScroll from '@/components/site/smooth-scroll'
-import CustomCursor from '@/components/site/custom-cursor'
+
+const SmoothScroll = dynamic(() => import('@/components/site/smooth-scroll'), { ssr: false, loading: () => null })
+const CustomCursor = dynamic(() => import('@/components/site/custom-cursor'), { ssr: false, loading: () => null })
+
 import Nav from '@/components/site/nav'
 import Hero from '@/components/site/hero'
 import Marquee from '@/components/site/marquee'
@@ -14,14 +17,21 @@ import Timeline from '@/components/site/timeline'
 import Contact from '@/components/site/contact'
 import Footer from '@/components/site/footer'
 
-function App() {
+export default function App() {
   const [active, setActive] = useState(null)
+  const [isTouch, setIsTouch] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    setIsTouch(!!touch)
+  }, [])
 
   return (
     <SmoothScroll>
       <div className="relative bg-ink-950">
         <div className="grain" aria-hidden />
-        <CustomCursor />
+        {!isTouch && <CustomCursor />}
         <Toaster theme="dark" position="bottom-center" richColors />
         <Nav />
         <main>
@@ -38,5 +48,3 @@ function App() {
     </SmoothScroll>
   )
 }
-
-export default App
