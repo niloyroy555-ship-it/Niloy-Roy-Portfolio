@@ -14,25 +14,17 @@ export default function ParticleField({ className = '' }) {
     let width = 0, height = 0, dpr = Math.min(window.devicePixelRatio || 1, 2)
     let raf
     const mouse = { x: -9999, y: -9999 }
-    let rect = { left: 0, top: 0 }
-    let frameCount = 0
 
     const resize = () => {
-      const r = canvas.parentElement.getBoundingClientRect()
-      rect = { left: r.left, top: r.top }
-      width = Math.max(1, Math.floor(r.width))
-      height = Math.max(1, Math.floor(r.height))
+      const rect = canvas.parentElement.getBoundingClientRect()
+      width = rect.width; height = rect.height
       canvas.width = width * dpr; canvas.height = height * dpr
       canvas.style.width = width + 'px'; canvas.style.height = height + 'px'
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
 
-    // Particle count scaled down on small screens to reduce CPU/GPU pressure
-    const baseCount = Math.min(90, Math.floor((width * height) / 16000))
-    const smallScreen = width < 600
-    const count = Math.max(8, Math.floor(baseCount * (smallScreen ? 0.5 : 1)))
-
+    const count = Math.min(90, Math.floor((width * height) / 16000))
     const particles = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -48,8 +40,8 @@ export default function ParticleField({ className = '' }) {
     window.addEventListener('resize', resize)
 
     const draw = () => {
-      frameCount++
       ctx.clearRect(0, 0, width, height)
+      const rect = canvas.getBoundingClientRect()
       const mx = mouse.x - rect.left
       const my = mouse.y - rect.top
 
@@ -74,26 +66,20 @@ export default function ParticleField({ className = '' }) {
         ctx.fill()
       }
 
-      // Draw connective lines less frequently to save CPU on mobile
-      if (frameCount % 2 === 0) {
-        const maxDist = 110
-        for (let i = 0; i < particles.length; i++) {
-          const a = particles[i]
-          // Limit j range to reduce O(n^2) work on larger particle counts
-          for (let j = i + 1; j < particles.length && j < i + 10; j++) {
-            const b = particles[j]
-            const d = Math.hypot(a.x - b.x, a.y - b.y)
-            if (d < maxDist) {
-              ctx.beginPath()
-              ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
-              ctx.strokeStyle = `rgba(120,140,200,${(1 - d / maxDist) * 0.12})`
-              ctx.lineWidth = 0.5
-              ctx.stroke()
-            }
+      // connective lines
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const a = particles[i], b = particles[j]
+          const d = Math.hypot(a.x - b.x, a.y - b.y)
+          if (d < 110) {
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
+            ctx.strokeStyle = `rgba(120,140,200,${(1 - d / 110) * 0.14})`
+            ctx.lineWidth = 0.6
+            ctx.stroke()
           }
         }
       }
-
       raf = requestAnimationFrame(draw)
     }
 
