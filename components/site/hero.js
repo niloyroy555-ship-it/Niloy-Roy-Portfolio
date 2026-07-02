@@ -59,7 +59,7 @@ export default function Hero() {
           Available for freelance & full-time · {profile.location}
         </motion.div>
 
-        <h1 className="font-graffiti text-[16vw] leading-[0.98] tracking-normal text-white sm:text-[14vw] md:text-[10.5rem]">
+        <<h1 className="font-graffiti text-[20vw] leading-[0.95] tracking-normal text-white sm:text-[17vw] md:text-[13rem]">
           <span className="sr-only">{profile.name}</span>
           <span aria-hidden className="flex flex-wrap items-center justify-center">
             {letters.map((ch, i) => (
