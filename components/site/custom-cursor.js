@@ -121,13 +121,7 @@ export default function CustomCursor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!enabled && !touchEnabled) return null
-
-  const isLabel = !!label
-  const isLink = variant === 'link' || variant === 'view' || variant === 'open'
-  const ringSize = isLabel ? 78 : isLink ? 54 : 32
-
-  // --- Trail springs (explicit top-level hooks to respect rules of hooks) ---
+  // --- Trail springs (top-level hooks — must run on every render, before any early return) ---
   const trail0X = useSpring(x, { stiffness: 600, damping: 45 })
   const trail0Y = useSpring(y, { stiffness: 600, damping: 45 })
   const trail1X = useSpring(x, { stiffness: 480, damping: 39 })
@@ -139,6 +133,12 @@ export default function CustomCursor() {
 
   const trailXs = [trail0X, trail1X, trail2X, trail3X]
   const trailYs = [trail0Y, trail1Y, trail2Y, trail3Y]
+
+  if (!enabled && !touchEnabled) return null
+
+  const isLabel = !!label
+  const isLink = variant === 'link' || variant === 'view' || variant === 'open'
+  const ringSize = isLabel ? 78 : isLink ? 54 : 32
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[100]" aria-hidden>
