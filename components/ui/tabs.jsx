@@ -10,6 +10,7 @@ const Tabs = TabsPrimitive.Root
 const TabsList = React.forwardRef(({ className, children, ...props }, ref) => {
   const localRef = React.useRef(null)
   const blobRef = React.useRef(null)
+  const rafRef = React.useRef(null)
 
   React.useImperativeHandle(ref, () => localRef.current)
 
@@ -18,7 +19,9 @@ const TabsList = React.forwardRef(({ className, children, ...props }, ref) => {
     const blob = blobRef.current
     if (!listEl || !blob) return
 
+    // Put the blob vertically centered via CSS (top:50% + translateY(-50%)) and only translateX in JS
     const update = () => {
+      // single read
       const active = listEl.querySelector('[data-state="active"]')
       const first = listEl.querySelector('[role="tab"]')
       const el = active || first
@@ -26,33 +29,57 @@ const TabsList = React.forwardRef(({ className, children, ...props }, ref) => {
 
       const rect = el.getBoundingClientRect()
       const parentRect = listEl.getBoundingClientRect()
-      const left = rect.left - parentRect.left
+      const left = Math.round(rect.left - parentRect.left)
 
-      // size + position
+      // writes
       blob.style.width = `${Math.round(rect.width)}px`
       blob.style.height = `${Math.round(rect.height)}px`
-      blob.style.left = `${Math.round(left)}px`
-      // center vertically inside the list (uses translateY(-50%))
-      const top = rect.top - parentRect.top + rect.height / 2
-      blob.style.top = `${Math.round(top)}px`
+      // Use translate3d for GPU-accelerated movement
+      blob.style.transform = `translate3d(${left}px, -50%, 0)`
       blob.style.opacity = '1'
     }
 
-    // initial
-    update()
+    const scheduleUpdate = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null
+        update()
+      })
+    }
 
-    const ro = new ResizeObserver(update)
+    // initial
+    scheduleUpdate()
+
+    // Observe size changes of the list (tabs wrapping/responsive)
+    const ro = new ResizeObserver(scheduleUpdate)
     ro.observe(listEl)
 
-    const mo = new MutationObserver(update)
-    mo.observe(listEl, { attributes: true, childList: true, subtree: true })
+    // Observe attribute changes only on direct children (data-state changes when active tab changes)
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes') {
+          if (m.attributeName === 'data-state' || m.attributeName === 'class') {
+            scheduleUpdate()
+            return
+          }
+        }
+        if (m.type === 'childList') {
+          scheduleUpdate()
+          return
+        }
+      }
+    })
+    // Observe only immediate children attributes to reduce work
+    mo.observe(listEl, { attributes: true, childList: true, subtree: false, attributeFilter: ['data-state', 'class'] })
 
-    window.addEventListener('resize', update)
+    const onResize = () => scheduleUpdate()
+    window.addEventListener('resize', onResize, { passive: true })
 
     return () => {
       ro.disconnect()
       mo.disconnect()
-      window.removeEventListener('resize', update)
+      window.removeEventListener('resize', onResize)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
   }, [])
 
@@ -76,7 +103,7 @@ const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "tab-trigger inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
+      "tab-trigger inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-colors duration-220 ease-[cubic-bezier(.2,.9,.2,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
       className
     )}
     {...props} />
