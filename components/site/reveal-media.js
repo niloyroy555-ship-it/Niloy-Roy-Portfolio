@@ -76,9 +76,6 @@ export default function RevealMedia({
           />
         )}
       </motion.div>
-
-      {/* curtain wipe - optimized for GPU acceleration */}
-      
-    </div>
+      </div>
   )
 }
