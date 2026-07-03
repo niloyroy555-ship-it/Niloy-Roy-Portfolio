@@ -65,7 +65,7 @@ export default function ProjectModal({ project, onClose }) {
   const heroIsVideo = project && project.type === 'video'
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {project && (
         <motion.div
           className="fixed inset-0 z-[90] overflow-y-auto"
@@ -73,20 +73,24 @@ export default function ProjectModal({ project, onClose }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.35 }}
         >
+          {/* Backdrop - optimized: no blur, simple fade */}
           <motion.div
-            className="absolute inset-0 bg-ink-950/80 backdrop-blur-xl"
+            className="absolute inset-0 bg-ink-950/80"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
           />
           <motion.div
-            initial={{ scale: 0.92, opacity: 0, y: 40 }}
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.94, opacity: 0, y: 30 }}
-            transition={{ duration: 0.6, ease }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, ease }}
             className="relative mx-auto my-6 w-[94%] max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-[#0B0B0E] md:my-12"
+            style={{ willChange: 'transform, opacity' }}
           >
             <button
               onClick={onClose}

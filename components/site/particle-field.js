@@ -1,10 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Lightweight Canvas2D particle field that reacts to the cursor.
 export default function ParticleField({ className = '' }) {
   const canvasRef = useRef(null)
+  const [enabled,setEnabled]=useState(true)
+
+  useEffect(()=>{setEnabled(window.innerWidth>=768)},[])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -91,7 +94,9 @@ export default function ParticleField({ className = '' }) {
       draw()
     }
 
-    return () => {
+    if (!enabled) return null
+
+  return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseout', onLeave)
