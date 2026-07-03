@@ -59,68 +59,7 @@ export default function CustomCursor() {
       document.documentElement.classList.remove('cursor-none-desktop')
     }
   }, [x, y])
-
-  // --- Touch: mobile cursor implementation ---
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    // Respect prefers-reduced-motion
-    const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reducedMotion) return
-
-    // Detect touch-capable devices (capability checks preferred)
-    const touchCapable = 'ontouchstart' in window || (navigator && navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
-    if (!touchCapable) return
-
-    setTouchEnabled(true)
-
-    let fadeTimeout = null
-
-    const onTouchStart = (e) => {
-      const t = e.touches && e.touches[0]
-      if (!t) return
-      x.set(t.clientX)
-      y.set(t.clientY)
-      setTouchActive(true)
-      setTouchVisible(true)
-      if (fadeTimeout) {
-        clearTimeout(fadeTimeout)
-        fadeTimeout = null
-      }
-    }
-
-    const onTouchMove = (e) => {
-      const t = e.touches && e.touches[0]
-      if (!t) return
-      x.set(t.clientX)
-      y.set(t.clientY)
-    }
-
-    const onTouchEnd = () => {
-      setTouchActive(false)
-      fadeTimeout = setTimeout(() => {
-        setTouchVisible(false)
-      }, 300)
-    }
-
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchmove', onTouchMove, { passive: true })
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
-    window.addEventListener('touchcancel', onTouchEnd, { passive: true })
-
-    return () => {
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchmove', onTouchMove)
-      window.removeEventListener('touchend', onTouchEnd)
-      window.removeEventListener('touchcancel', onTouchEnd)
-      if (fadeTimeout) clearTimeout(fadeTimeout)
-      setTouchEnabled(false)
-      setTouchActive(false)
-      setTouchVisible(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
+  
   // --- Trail springs (top-level hooks — must run on every render, before any early return) ---
   const trail0X = useSpring(x, { stiffness: 600, damping: 45 })
   const trail0Y = useSpring(y, { stiffness: 600, damping: 45 })
