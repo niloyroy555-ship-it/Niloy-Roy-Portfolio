@@ -109,10 +109,10 @@ export default function Hero() {
           className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
           <Magnetic strength={0.5}>
-            <a href="https://www.behance.net/niloyroy99" target="_blank" rel="noopener noreferrer" data-cursor="link" className="group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.25)]">
+            <button onClick={() => scrollToId('#work')} data-cursor="link" className="group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.25)]">
               View Portfolio
               <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+            </button>
           </Magnetic>
           <Magnetic strength={0.5}>
             <button onClick={() => scrollToId('#contact')} data-cursor="link" className="rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/5">
