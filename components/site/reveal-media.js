@@ -78,14 +78,7 @@ export default function RevealMedia({
       </motion.div>
 
       {/* curtain wipe - optimized for GPU acceleration */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-ink-950"
-        style={{ transformOrigin: 'bottom', willChange: 'transform' }}
-        initial={{ scaleY: 1 }}
-        animate={{ scaleY: show ? 0 : 1 }}
-        transition={{ duration: 0.5, ease: curtainEase, delay }}
-      />
+      
     </div>
   )
 }
