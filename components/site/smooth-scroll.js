@@ -6,7 +6,11 @@ import Lenis from 'lenis'
 export default function SmoothScroll({ children }) {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) return
+const touch =
+  'ontouchstart' in window ||
+  navigator.maxTouchPoints > 0
+
+if (reduce || touch) return
 
     const lenis = new Lenis({
       lerp: 0.09,
