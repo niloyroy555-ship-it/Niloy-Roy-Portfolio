@@ -8,7 +8,9 @@ const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', 
 const graffiti = localFont({ src: '../public/fonts/adrip1.ttf', variable: '--font-graffiti', display: 'swap' })
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://magic-studio-4.preview.emergentagent.com'),
+  // IMPORTANT: set NEXT_PUBLIC_BASE_URL in your deployment to your real site URL (https://example.com)
+  // Fallback below points to the GitHub Pages URL for this repo so social scrapers get an absolute origin.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://niloyroy555-ship-it.github.io/Niloy-Roy-Portfolio'),
   title: 'Niloy Roy — AI Visual Designer, Motion Designer & Video Editor',
   description: 'Portfolio of Niloy Roy — AI Visual Designer, Creative Designer, Video Editor & Prompt Engineer. Cinematic brand creatives, motion design and photography for premium brands.',
   keywords: ['Niloy Roy', 'AI Visual Designer', 'Motion Designer', 'Video Editor', 'Graphic Designer', 'Prompt Engineer', 'Portfolio', 'Kolkata'],
@@ -17,7 +19,8 @@ export const metadata = {
     title: 'Niloy Roy — AI Visual Designer & Motion Designer',
     description: 'Cinematic brand creatives, motion design and photography for premium brands.',
     type: 'website',
-    images: ['/My%20Portrait%201.png'],
+    // Use the portrait.jpg that already exists in /public — avoid spaces in filenames for social scrapers
+    images: ['/portrait.jpg'],
   },
   robots: { index: true, follow: true },
 }
