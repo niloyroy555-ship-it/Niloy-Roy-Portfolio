@@ -43,6 +43,13 @@ const TabsList = React.forwardRef(({ className, children, ...props }, ref) => {
       if (rafRef.current) return
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null
+
+        // If the page is programmatically scrolling, defer a short moment so layout stabilizes
+        if (typeof document !== 'undefined' && document.documentElement.classList.contains('is-scrolling')) {
+          setTimeout(update, 120)
+          return
+        }
+
         update()
       })
     }
@@ -114,9 +121,10 @@ const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-2 data-[state=inactive]:pointer-events-none data-[state=active]:opacity-100 data-[state=active]:translate-y-0 transition-opacity transition-transform duration-500",
       className
     )}
+    style={{ transitionTimingFunction: 'cubic-bezier(.2,.9,.2,1)' }}
     {...props} />
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
