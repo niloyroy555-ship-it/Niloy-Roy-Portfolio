@@ -12,6 +12,10 @@ function posterFor(src) {
 }
 
 function Media({ project, className }) {
+  // Lets individual projects shift the visible crop of their cover (e.g. 'top',
+  // 'center 20%') without affecting every other card. Defaults to center.
+  const style = { objectPosition: project.coverPosition || 'center' }
+
   if (project.type === 'video') {
     return (
       <RevealMedia
@@ -19,11 +23,12 @@ function Media({ project, className }) {
         src={project.cover}
         poster={posterFor(project.cover)}
         className={className}
+        style={style}
         videoProps={{ muted: true, loop: true, playsInline: true, autoPlay: true, preload: 'metadata' }}
       />
     )
   }
-  return <RevealMedia type="image" src={project.cover} alt={project.title} className={className} />
+  return <RevealMedia type="image" src={project.cover} alt={project.title} className={className} style={style} />
 }
 
 function ProjectCard({ project, index, onOpen }) {

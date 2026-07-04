@@ -18,6 +18,7 @@ export default function RevealMedia({
   videoProps = {},
   delay = 0,
   priority = false,
+  style,
 }) {
   const ref = useRef(null)
   const mediaRef = useRef(null)
@@ -59,6 +60,7 @@ export default function RevealMedia({
             onLoadedData={() => setLoaded(true)}
             onError={() => setLoaded(true)}
             className={className}
+            style={style}
             {...videoProps}
           />
         ) : (
@@ -73,6 +75,7 @@ export default function RevealMedia({
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(true)}
             className={className}
+            style={style}
           />
         )}
       </motion.div>

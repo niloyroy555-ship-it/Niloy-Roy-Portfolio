@@ -63,7 +63,6 @@ export default function ProjectModal({ project, onClose }) {
   }, [project, onClose])
 
   const heroIsVideo = project && project.type === 'video'
-  const heroPosition = project?.coverPosition || 'center'
 
   return (
     <AnimatePresence mode="wait">
@@ -76,7 +75,7 @@ export default function ProjectModal({ project, onClose }) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35 }}
         >
-          {/* Backdrop */}
+          {/* Backdrop - optimized: no blur, simple fade */}
           <motion.div
             className="absolute inset-0 bg-ink-950/80"
             onClick={onClose}
@@ -110,17 +109,10 @@ export default function ProjectModal({ project, onClose }) {
                   src={project.cover}
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
                   className="h-full w-full object-cover"
-                  style={{ objectPosition: heroPosition }}
                   videoProps={{ autoPlay: true, muted: true, loop: true, playsInline: true }}
                 />
               ) : (
-                <RevealMedia
-                  type="image"
-                  src={project.cover}
-                  alt={project.title}
-                  className="h-full w-full object-cover"
-                  style={{ objectPosition: heroPosition }}
-                />
+                <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" />
               )}
 
               <div className="absolute bottom-6 left-6 right-6" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.5)' }}>
