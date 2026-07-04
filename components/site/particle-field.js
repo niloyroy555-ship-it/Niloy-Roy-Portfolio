@@ -3,20 +3,20 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Lightweight Canvas2D particle field that reacts to the cursor.
-// Desktop keeps the full animation (dots + connective lines), unchanged.
-// On phones/small screens and touch devices it doesn't render at all, since
-// there's no cursor for it to react to — previously the "disable on mobile"
-// check ran too late (after the render loop had already started, and off a
-// stale value besides), so the O(n^2) connective-line pass was silently
-// running every frame on phones too. That's what was causing the sustained
-// CPU/battery drain and jank.
+// Perf notes (mobile lag fix):
+// - The old version computed `mobile`/`enabled` but never actually used them
+//   to stop the animation loop, so it ran full particle simulation forever
+//   on every device, even phones, even off-screen. That constant background
+//   rAF + O(n^2) line pass was a steady CPU/battery/jank drain.
+// - This version: skips entirely on small screens (no mouse to react to
+//   anyway), pauses via IntersectionObserver when off-screen, and pauses on
+//   tab visibility change. Same visuals on desktop, none of the mobile cost.
 export default function ParticleField({ className = '' }) {
   const canvasRef = useRef(null)
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
-    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    setEnabled(window.innerWidth >= 768 && !touch)
+    setEnabled(window.innerWidth >= 768 && !window.matchMedia('(pointer: coarse)').matches)
   }, [])
 
   useEffect(() => {
@@ -25,9 +25,10 @@ export default function ParticleField({ className = '' }) {
     if (!canvas) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const ctx = canvas.getContext('2d')
-    let width = 0, height = 0, dpr = Math.min(window.devicePixelRatio || 1, 2)
-    let raf
-    let running = true
+    let width = 0, height = 0
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    let raf = null
+    let running = false
     const mouse = { x: -9999, y: -9999 }
 
     const resize = () => {
@@ -50,19 +51,48 @@ export default function ParticleField({ className = '' }) {
 
     const onMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY }
     const onLeave = () => { mouse.x = -9999; mouse.y = -9999 }
-    // Pause the RAF loop while the tab is hidden so it isn't burning
-    // CPU/battery in a background tab.
-    const onVisibility = () => {
-      running = !document.hidden
-      if (running) raf = requestAnimationFrame(draw)
-    }
     window.addEventListener('mousemove', onMove, { passive: true })
     window.addEventListener('mouseout', onLeave)
     window.addEventListener('resize', resize)
-    document.addEventListener('visibilitychange', onVisibility)
 
-    const draw = () => {
+    // --- Dynamic frame rate ---
+    // Instead of always driving the loop at whatever the display refresh
+    // rate is (60/120fps), we target a frame rate and adapt it: if recent
+    // frames are taking longer than the target interval (device is under
+    // load / lower-powered), we back off toward a slower fps; once frames
+    // are comfortably fast again, we ease back up.
+    const MAX_FPS = 60
+    const MIN_FPS = 24
+    let targetFps = MAX_FPS
+    let frameInterval = 1000 / targetFps
+    let lastFrameTime = 0
+    let avgFrameMs = 1000 / MAX_FPS
+    let evalCounter = 0
+
+    const draw = (now) => {
       if (!running) return
+      raf = requestAnimationFrame(draw)
+
+      const elapsed = now - lastFrameTime
+      if (elapsed < frameInterval) return
+      const actualDelta = lastFrameTime ? elapsed : frameInterval
+      lastFrameTime = now - (elapsed % frameInterval)
+
+      avgFrameMs = avgFrameMs * 0.9 + actualDelta * 0.1
+
+      evalCounter++
+      if (evalCounter >= 30) {
+        evalCounter = 0
+        const currentFps = 1000 / avgFrameMs
+        if (currentFps < targetFps - 8 && targetFps > MIN_FPS) {
+          targetFps = Math.max(MIN_FPS, targetFps - 8)
+          frameInterval = 1000 / targetFps
+        } else if (currentFps > targetFps + 10 && targetFps < MAX_FPS) {
+          targetFps = Math.min(MAX_FPS, targetFps + 6)
+          frameInterval = 1000 / targetFps
+        }
+      }
+
       ctx.clearRect(0, 0, width, height)
       const rect = canvas.getBoundingClientRect()
       const mx = mouse.x - rect.left
@@ -74,7 +104,6 @@ export default function ParticleField({ className = '' }) {
         if (p.x < 0 || p.x > width) p.vx *= -1
         if (p.y < 0 || p.y > height) p.vy *= -1
 
-        // cursor influence
         const dx = p.x - mx, dy = p.y - my
         const dist = Math.hypot(dx, dy)
         if (dist < 130) {
@@ -89,7 +118,6 @@ export default function ParticleField({ className = '' }) {
         ctx.fill()
       }
 
-      // connective lines
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const a = particles[i], b = particles[j]
@@ -103,24 +131,46 @@ export default function ParticleField({ className = '' }) {
           }
         }
       }
+    }
+
+    const start = () => {
+      if (running) return
+      running = true
+      lastFrameTime = 0
       raf = requestAnimationFrame(draw)
+    }
+    const stop = () => {
+      running = false
+      if (raf) cancelAnimationFrame(raf)
+      raf = null
     }
 
     if (reduce) {
-      // draw a single static frame
-      draw()
-      cancelAnimationFrame(raf)
+      running = true
+      draw(performance.now())
+      running = false
     } else {
-      draw()
+      const io = new IntersectionObserver(
+        ([entry]) => { entry.isIntersecting ? start() : stop() },
+        { threshold: 0 }
+      )
+      io.observe(canvas)
+
+      const onVisibility = () => { document.hidden ? stop() : start() }
+      document.addEventListener('visibilitychange', onVisibility)
+
+      var cleanupObservers = () => {
+        io.disconnect()
+        document.removeEventListener('visibilitychange', onVisibility)
+      }
     }
 
     return () => {
-      running = false
-      cancelAnimationFrame(raf)
+      stop()
+      if (cleanupObservers) cleanupObservers()
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseout', onLeave)
       window.removeEventListener('resize', resize)
-      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [enabled])
 
