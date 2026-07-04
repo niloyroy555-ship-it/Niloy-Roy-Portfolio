@@ -8,18 +8,31 @@ const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', 
 const graffiti = localFont({ src: '../public/fonts/adrip1.ttf', variable: '--font-graffiti', display: 'swap' })
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://magic-studio-4.preview.emergentagent.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://niloy-roy-portfolio.vercel.app'),
   title: 'Niloy Roy — AI Visual Designer, Motion Designer & Video Editor',
   description: 'Portfolio of Niloy Roy — AI Visual Designer, Creative Designer, Video Editor & Prompt Engineer. Cinematic brand creatives, motion design and photography for premium brands.',
   keywords: ['Niloy Roy', 'AI Visual Designer', 'Motion Designer', 'Video Editor', 'Graphic Designer', 'Prompt Engineer', 'Portfolio', 'Kolkata'],
   authors: [{ name: 'Niloy Roy' }],
   openGraph: {
-  url: 'https://niloy-roy-portfolio.vercel.app',
-  title: 'Niloy Roy — AI Visual Designer & Motion Designer',
-  description: 'Cinematic brand creatives, motion design and photography for premium brands.',
-  type: 'website',
-  images: ['/og-image.png'],
-},
+    url: 'https://niloy-roy-portfolio.vercel.app',
+    title: 'Niloy Roy — AI Visual Designer & Motion Designer',
+    description: 'Cinematic brand creatives, motion design and photography for premium brands.',
+    type: 'website',
+    siteName: 'Niloy Roy Portfolio',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Niloy Roy — AI Visual Designer & Motion Designer',
+    description: 'Cinematic brand creatives, motion design and photography for premium brands.',
+    images: ['/og-image.png'],
+  },
   robots: { index: true, follow: true },
 }
 
