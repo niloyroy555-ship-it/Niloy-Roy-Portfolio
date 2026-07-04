@@ -114,8 +114,8 @@ export default function ProjectModal({ project, onClose }) {
               ) : (
                 <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0E] via-[#0B0B0E]/20 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6">
+
+              <div className="absolute bottom-6 left-6 right-6" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.5)' }}>
                 <span className="mb-3 inline-block rounded-full glass px-3 py-1 text-[11px] tracking-wide text-white/80">{project.category} · {project.year}</span>
                 <h2 className="font-display text-3xl font-bold leading-tight text-white md:text-5xl">{project.title}</h2>
               </div>

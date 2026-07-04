@@ -2,21 +2,30 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-// Lightweight Canvas2D particle field that reacts to the cursor.
-// Desktop keeps the full animation (dots + connective lines), unchanged.
-// On phones/small screens and touch devices it doesn't render at all, since
-// there's no cursor for it to react to — previously the "disable on mobile"
-// check ran too late (after the render loop had already started, and off a
-// stale value besides), so the O(n^2) connective-line pass was silently
-// running every frame on phones too. That's what was causing the sustained
-// CPU/battery drain and jank.
+// Lightweight Canvas2D particle field ("stars & constellation" effect).
+//
+// Perf notes:
+// - Runs on ALL devices, including mobile — but mobile gets a lighter
+//   version: fewer particles, a lower fps ceiling, and shorter connective
+//   lines, since it's an ambient background effect and doesn't need to
+//   match desktop density to read as "stars."
+// - Pauses itself via IntersectionObserver when scrolled off-screen, and
+//   pauses on tab visibility change, so it never burns battery for a
+//   section the person isn't even looking at.
+// - Dynamic fps: measures real frame spacing and backs off the target fps
+//   under load, easing back up when the device is keeping up comfortably.
+// - On touch devices there's no persistent hover, so touches nudge the
+//   particles briefly instead of a constant cursor-follow.
 export default function ParticleField({ className = '' }) {
   const canvasRef = useRef(null)
   const [enabled, setEnabled] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    setEnabled(window.innerWidth >= 768 && !touch)
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+    const small = window.innerWidth < 768
+    setIsMobile(coarse || small)
+    setEnabled(true)
   }, [])
 
   useEffect(() => {
@@ -25,9 +34,10 @@ export default function ParticleField({ className = '' }) {
     if (!canvas) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const ctx = canvas.getContext('2d')
-    let width = 0, height = 0, dpr = Math.min(window.devicePixelRatio || 1, 2)
-    let raf
-    let running = true
+    let width = 0, height = 0
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2)
+    let raf = null
+    let running = false
     const mouse = { x: -9999, y: -9999 }
 
     const resize = () => {
@@ -39,7 +49,12 @@ export default function ParticleField({ className = '' }) {
     }
     resize()
 
-    const count = Math.min(60, Math.floor((width * height) / 22000))
+    const count = isMobile
+      ? Math.min(20, Math.floor((width * height) / 42000))
+      : Math.min(60, Math.floor((width * height) / 22000))
+    const linkDist = isMobile ? 85 : 110
+    const influenceDist = isMobile ? 100 : 130
+
     const particles = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -50,19 +65,54 @@ export default function ParticleField({ className = '' }) {
 
     const onMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY }
     const onLeave = () => { mouse.x = -9999; mouse.y = -9999 }
-    // Pause the RAF loop while the tab is hidden so it isn't burning
-    // CPU/battery in a background tab.
-    const onVisibility = () => {
-      running = !document.hidden
-      if (running) raf = requestAnimationFrame(draw)
+    const onTouchMove = (e) => {
+      const t = e.touches && e.touches[0]
+      if (t) { mouse.x = t.clientX; mouse.y = t.clientY }
     }
-    window.addEventListener('mousemove', onMove, { passive: true })
-    window.addEventListener('mouseout', onLeave)
-    window.addEventListener('resize', resize)
-    document.addEventListener('visibilitychange', onVisibility)
+    const onTouchEnd = () => { mouse.x = -9999; mouse.y = -9999 }
 
-    const draw = () => {
+    if (isMobile) {
+      window.addEventListener('touchmove', onTouchMove, { passive: true })
+      window.addEventListener('touchend', onTouchEnd, { passive: true })
+      window.addEventListener('touchcancel', onTouchEnd, { passive: true })
+    } else {
+      window.addEventListener('mousemove', onMove, { passive: true })
+      window.addEventListener('mouseout', onLeave)
+    }
+    window.addEventListener('resize', resize)
+
+    const MAX_FPS = isMobile ? 30 : 60
+    const MIN_FPS = isMobile ? 15 : 24
+    let targetFps = MAX_FPS
+    let frameInterval = 1000 / targetFps
+    let lastFrameTime = 0
+    let avgFrameMs = 1000 / MAX_FPS
+    let evalCounter = 0
+
+    const draw = (now) => {
       if (!running) return
+      raf = requestAnimationFrame(draw)
+
+      const elapsed = now - lastFrameTime
+      if (elapsed < frameInterval) return
+      const actualDelta = lastFrameTime ? elapsed : frameInterval
+      lastFrameTime = now - (elapsed % frameInterval)
+
+      avgFrameMs = avgFrameMs * 0.9 + actualDelta * 0.1
+
+      evalCounter++
+      if (evalCounter >= 30) {
+        evalCounter = 0
+        const currentFps = 1000 / avgFrameMs
+        if (currentFps < targetFps - 8 && targetFps > MIN_FPS) {
+          targetFps = Math.max(MIN_FPS, targetFps - 8)
+          frameInterval = 1000 / targetFps
+        } else if (currentFps > targetFps + 10 && targetFps < MAX_FPS) {
+          targetFps = Math.min(MAX_FPS, targetFps + 6)
+          frameInterval = 1000 / targetFps
+        }
+      }
+
       ctx.clearRect(0, 0, width, height)
       const rect = canvas.getBoundingClientRect()
       const mx = mouse.x - rect.left
@@ -74,55 +124,83 @@ export default function ParticleField({ className = '' }) {
         if (p.x < 0 || p.x > width) p.vx *= -1
         if (p.y < 0 || p.y > height) p.vy *= -1
 
-        // cursor influence
         const dx = p.x - mx, dy = p.y - my
         const dist = Math.hypot(dx, dy)
-        if (dist < 130) {
-          const force = (130 - dist) / 130
+        if (dist < influenceDist) {
+          const force = (influenceDist - dist) / influenceDist
           p.x += (dx / (dist || 1)) * force * 1.2
           p.y += (dy / (dist || 1)) * force * 1.2
         }
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = dist < 160 ? 'rgba(91,140,255,0.9)' : 'rgba(255,255,255,0.45)'
+        ctx.fillStyle = dist < influenceDist + 30 ? 'rgba(91,140,255,0.9)' : 'rgba(255,255,255,0.45)'
         ctx.fill()
       }
 
-      // connective lines
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const a = particles[i], b = particles[j]
           const d = Math.hypot(a.x - b.x, a.y - b.y)
-          if (d < 110) {
+          if (d < linkDist) {
             ctx.beginPath()
             ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(120,140,200,${(1 - d / 110) * 0.14})`
+            ctx.strokeStyle = `rgba(120,140,200,${(1 - d / linkDist) * 0.14})`
             ctx.lineWidth = 0.6
             ctx.stroke()
           }
         }
       }
-      raf = requestAnimationFrame(draw)
     }
 
+    const start = () => {
+      if (running) return
+      running = true
+      lastFrameTime = 0
+      raf = requestAnimationFrame(draw)
+    }
+    const stop = () => {
+      running = false
+      if (raf) cancelAnimationFrame(raf)
+      raf = null
+    }
+
+    let cleanupObservers = null
+
     if (reduce) {
-      // draw a single static frame
-      draw()
-      cancelAnimationFrame(raf)
+      running = true
+      draw(performance.now())
+      running = false
     } else {
-      draw()
+      const io = new IntersectionObserver(
+        ([entry]) => { entry.isIntersecting ? start() : stop() },
+        { threshold: 0 }
+      )
+      io.observe(canvas)
+
+      const onVisibility = () => { document.hidden ? stop() : start() }
+      document.addEventListener('visibilitychange', onVisibility)
+
+      cleanupObservers = () => {
+        io.disconnect()
+        document.removeEventListener('visibilitychange', onVisibility)
+      }
     }
 
     return () => {
-      running = false
-      cancelAnimationFrame(raf)
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseout', onLeave)
+      stop()
+      if (cleanupObservers) cleanupObservers()
+      if (isMobile) {
+        window.removeEventListener('touchmove', onTouchMove)
+        window.removeEventListener('touchend', onTouchEnd)
+        window.removeEventListener('touchcancel', onTouchEnd)
+      } else {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseout', onLeave)
+      }
       window.removeEventListener('resize', resize)
-      document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [enabled])
+  }, [enabled, isMobile])
 
   if (!enabled) return null
   return <canvas ref={canvasRef} className={className} />

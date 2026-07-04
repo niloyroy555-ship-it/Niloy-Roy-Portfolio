@@ -10,6 +10,7 @@ import { scrollToId } from './smooth-scroll'
 
 const ease = [0.22, 1, 0.36, 1]
 const letters = profile.name.split('')
+const behanceUrl = profile.socials.find((s) => s.label === 'Behance')?.href
 
 export default function Hero() {
   const [roleIdx, setRoleIdx] = useState(0)
@@ -38,8 +39,8 @@ export default function Hero() {
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
       {/* ambient gradients */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[120px] animate-aurora" />
-        <div className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[110px] animate-aurora" style={{ animationDelay: '-6s' }} />
+        <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
+        <div className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[55px] animate-aurora md:blur-[110px]" style={{ animationDelay: '-6s' }} />
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
       </div>
 
@@ -109,10 +110,10 @@ export default function Hero() {
           className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
           <Magnetic strength={0.5}>
-            <button onClick={() => scrollToId('#work')} data-cursor="link" className="group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.25)]">
+            <a href={behanceUrl} target="_blank" rel="noopener noreferrer" data-cursor="link" className="group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.25)]">
               View Portfolio
               <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </button>
+            </a>
           </Magnetic>
           <Magnetic strength={0.5}>
             <button onClick={() => scrollToId('#contact')} data-cursor="link" className="rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/5">

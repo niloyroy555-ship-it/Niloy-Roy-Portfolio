@@ -57,14 +57,13 @@ function ProjectCard({ project, index, onOpen }) {
           data-cursor="open"
           data-cursor-label="View"
           style={{ rotateX: srx, rotateY: sry, transformStyle: 'preserve-3d' }}
-          className="group relative block w-full overflow-hidden rounded-3xl border border-white/8 bg-white/[0.02] text-left transition-shadow duration-500 hover:border-brand/40 hover:shadow-[0_30px_60px_rgba(0,0,0,0.45)]"
+          className="group relative block w-full overflow-hidden rounded-3xl border border-white/8 bg-white/[0.02] text-left transition-shadow duration-500 hover:border-brand/40 hover:shadow-[0_30px_60px_rgba(91,140,255,0.1)]"
         >
           <div className="relative aspect-[4/3] overflow-hidden">
             <Media
               project={project}
               className="h-full w-full scale-[1.02] object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
-            {/* Removed the dark gradient overlay so media is shown without the black vignette */}
             <div className="absolute right-4 top-4 grid h-11 w-11 translate-y-2 place-items-center rounded-full glass opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
               <ArrowUpRight size={18} className="text-white" />
             </div>
