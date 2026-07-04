@@ -2,21 +2,30 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-// Lightweight Canvas2D particle field that reacts to the cursor.
-// Perf notes (mobile lag fix):
-// - The old version computed `mobile`/`enabled` but never actually used them
-//   to stop the animation loop, so it ran full particle simulation forever
-//   on every device, even phones, even off-screen. That constant background
-//   rAF + O(n^2) line pass was a steady CPU/battery/jank drain.
-// - This version: skips entirely on small screens (no mouse to react to
-//   anyway), pauses via IntersectionObserver when off-screen, and pauses on
-//   tab visibility change. Same visuals on desktop, none of the mobile cost.
+// Lightweight Canvas2D particle field ("stars & constellation" effect).
+//
+// Perf notes:
+// - Runs on ALL devices, including mobile — but mobile gets a lighter
+//   version: fewer particles, a lower fps ceiling, and shorter connective
+//   lines, since it's an ambient background effect and doesn't need to
+//   match desktop density to read as "stars."
+// - Pauses itself via IntersectionObserver when scrolled off-screen, and
+//   pauses on tab visibility change, so it never burns battery for a
+//   section the person isn't even looking at.
+// - Dynamic fps: measures real frame spacing and backs off the target fps
+//   under load, easing back up when the device is keeping up comfortably.
+// - On touch devices there's no persistent hover, so touches nudge the
+//   particles briefly instead of a constant cursor-follow.
 export default function ParticleField({ className = '' }) {
   const canvasRef = useRef(null)
   const [enabled, setEnabled] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    setEnabled(window.innerWidth >= 768 && !window.matchMedia('(pointer: coarse)').matches)
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+    const small = window.innerWidth < 768
+    setIsMobile(coarse || small)
+    setEnabled(true)
   }, [])
 
   useEffect(() => {
@@ -26,7 +35,7 @@ export default function ParticleField({ className = '' }) {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const ctx = canvas.getContext('2d')
     let width = 0, height = 0
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2)
     let raf = null
     let running = false
     const mouse = { x: -9999, y: -9999 }
@@ -40,7 +49,12 @@ export default function ParticleField({ className = '' }) {
     }
     resize()
 
-    const count = Math.min(60, Math.floor((width * height) / 22000))
+    const count = isMobile
+      ? Math.min(20, Math.floor((width * height) / 42000))
+      : Math.min(60, Math.floor((width * height) / 22000))
+    const linkDist = isMobile ? 85 : 110
+    const influenceDist = isMobile ? 100 : 130
+
     const particles = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -51,18 +65,24 @@ export default function ParticleField({ className = '' }) {
 
     const onMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY }
     const onLeave = () => { mouse.x = -9999; mouse.y = -9999 }
-    window.addEventListener('mousemove', onMove, { passive: true })
-    window.addEventListener('mouseout', onLeave)
+    const onTouchMove = (e) => {
+      const t = e.touches && e.touches[0]
+      if (t) { mouse.x = t.clientX; mouse.y = t.clientY }
+    }
+    const onTouchEnd = () => { mouse.x = -9999; mouse.y = -9999 }
+
+    if (isMobile) {
+      window.addEventListener('touchmove', onTouchMove, { passive: true })
+      window.addEventListener('touchend', onTouchEnd, { passive: true })
+      window.addEventListener('touchcancel', onTouchEnd, { passive: true })
+    } else {
+      window.addEventListener('mousemove', onMove, { passive: true })
+      window.addEventListener('mouseout', onLeave)
+    }
     window.addEventListener('resize', resize)
 
-    // --- Dynamic frame rate ---
-    // Instead of always driving the loop at whatever the display refresh
-    // rate is (60/120fps), we target a frame rate and adapt it: if recent
-    // frames are taking longer than the target interval (device is under
-    // load / lower-powered), we back off toward a slower fps; once frames
-    // are comfortably fast again, we ease back up.
-    const MAX_FPS = 60
-    const MIN_FPS = 24
+    const MAX_FPS = isMobile ? 30 : 60
+    const MIN_FPS = isMobile ? 15 : 24
     let targetFps = MAX_FPS
     let frameInterval = 1000 / targetFps
     let lastFrameTime = 0
@@ -106,15 +126,15 @@ export default function ParticleField({ className = '' }) {
 
         const dx = p.x - mx, dy = p.y - my
         const dist = Math.hypot(dx, dy)
-        if (dist < 130) {
-          const force = (130 - dist) / 130
+        if (dist < influenceDist) {
+          const force = (influenceDist - dist) / influenceDist
           p.x += (dx / (dist || 1)) * force * 1.2
           p.y += (dy / (dist || 1)) * force * 1.2
         }
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = dist < 160 ? 'rgba(91,140,255,0.9)' : 'rgba(255,255,255,0.45)'
+        ctx.fillStyle = dist < influenceDist + 30 ? 'rgba(91,140,255,0.9)' : 'rgba(255,255,255,0.45)'
         ctx.fill()
       }
 
@@ -122,10 +142,10 @@ export default function ParticleField({ className = '' }) {
         for (let j = i + 1; j < particles.length; j++) {
           const a = particles[i], b = particles[j]
           const d = Math.hypot(a.x - b.x, a.y - b.y)
-          if (d < 110) {
+          if (d < linkDist) {
             ctx.beginPath()
             ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(120,140,200,${(1 - d / 110) * 0.14})`
+            ctx.strokeStyle = `rgba(120,140,200,${(1 - d / linkDist) * 0.14})`
             ctx.lineWidth = 0.6
             ctx.stroke()
           }
@@ -145,6 +165,8 @@ export default function ParticleField({ className = '' }) {
       raf = null
     }
 
+    let cleanupObservers = null
+
     if (reduce) {
       running = true
       draw(performance.now())
@@ -159,7 +181,7 @@ export default function ParticleField({ className = '' }) {
       const onVisibility = () => { document.hidden ? stop() : start() }
       document.addEventListener('visibilitychange', onVisibility)
 
-      var cleanupObservers = () => {
+      cleanupObservers = () => {
         io.disconnect()
         document.removeEventListener('visibilitychange', onVisibility)
       }
@@ -168,11 +190,17 @@ export default function ParticleField({ className = '' }) {
     return () => {
       stop()
       if (cleanupObservers) cleanupObservers()
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseout', onLeave)
+      if (isMobile) {
+        window.removeEventListener('touchmove', onTouchMove)
+        window.removeEventListener('touchend', onTouchEnd)
+        window.removeEventListener('touchcancel', onTouchEnd)
+      } else {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseout', onLeave)
+      }
       window.removeEventListener('resize', resize)
     }
-  }, [enabled])
+  }, [enabled, isMobile])
 
   if (!enabled) return null
   return <canvas ref={canvasRef} className={className} />
