@@ -39,7 +39,11 @@ export default function ParticleField({ className = '' }) {
     }
     resize()
 
-    const count = Math.min(60, Math.floor((width * height) / 22000))
+const mobile = window.innerWidth < 768
+
+const count = mobile
+  ? Math.min(18, Math.floor((width * height) / 45000))
+  : Math.min(60, Math.floor((width * height) / 22000))
     const particles = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
