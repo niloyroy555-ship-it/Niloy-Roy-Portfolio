@@ -58,11 +58,61 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .text-balance { text-wrap: balance; }
-  .grain {
-    position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
   .mask-fade-x { -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); }
+
+  /* Liquid glass tabs styles: buttery smooth, GPU-accelerated */
+  .tabs-glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    box-shadow: 0 8px 30px rgba(6,8,12,0.55);
+    padding: 0.35rem;
+    overflow: visible;
+  }
+
+  .tab-trigger {
+    position: relative;
+    z-index: 2; /* sits above the blob */
+    color: #EDEDED;
+    transition: color .22s ease;
+  }
+
+  .tab-trigger::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.5rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+    mix-blend-mode: overlay;
+    opacity: 0;
+    transition: opacity .22s ease;
+    pointer-events: none;
+  }
+  .tab-trigger:hover::before,
+  .tab-trigger[data-state="active"]::before {
+    opacity: 1;
+  }
+
+  .tab-blob {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translate3d(0, -50%, 0);
+    width: 100px;
+    height: 36px;
+    border-radius: 999px;
+    background:
+      radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.35) 14%, rgba(255,255,255,0.06) 48%, rgba(255,255,255,0.01) 60%, transparent 100%),
+      linear-gradient(135deg, rgba(120,160,255,0.04), rgba(160,120,255,0.03));
+    filter: blur(12px) saturate(140%);
+    transition: transform .35s cubic-bezier(.2,.9,.2,1), width .28s ease, height .28s ease;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: screen;
+    opacity: 0;
+    will-change: transform, width, height, opacity;
+  }
 }
 
 /* Custom scrollbar */
