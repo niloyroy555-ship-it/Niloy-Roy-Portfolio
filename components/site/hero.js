@@ -37,6 +37,9 @@ export default function Hero() {
 
   return (
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
+      
+      <div className="hero-grid" />
+
       {/* ambient gradients */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
