@@ -7,23 +7,32 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', display: 'swap', weight: ['400', '500', '600', '700'] })
 const graffiti = localFont({ src: '../public/fonts/adrip1.ttf', variable: '--font-graffiti', display: 'swap' })
 
+// Single source of truth for the site's public URL.
+// Set NEXT_PUBLIC_BASE_URL in your Vercel project's Environment Variables
+// to your real production domain (e.g. https://niloyroy.com).
+// Everything below reads from this constant so it can never drift out of sync.
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://niloy-roy-portfolio.vercel.app'
+
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://niloy-roy-portfolio.vercel.app'),
+  metadataBase: new URL(baseUrl),
   title: 'Niloy Roy — AI Visual Designer, Motion Designer & Video Editor',
   description: 'Portfolio of Niloy Roy — AI Visual Designer, Creative Designer, Video Editor & Prompt Engineer. Cinematic brand creatives, motion design and photography for premium brands.',
   keywords: ['Niloy Roy', 'AI Visual Designer', 'Motion Designer', 'Video Editor', 'Graphic Designer', 'Prompt Engineer', 'Portfolio', 'Kolkata'],
   authors: [{ name: 'Niloy Roy' }],
   openGraph: {
-    url: 'https://niloy-roy-portfolio.vercel.app',
+    url: baseUrl,
     title: 'Niloy Roy — AI Visual Designer & Motion Designer',
     description: 'Cinematic brand creatives, motion design and photography for premium brands.',
     type: 'website',
     siteName: 'Niloy Roy Portfolio',
     images: [
       {
+        // Resolved against metadataBase -> `${baseUrl}/og-image.png`
         url: '/og-image.png',
-        width: 1200,
-        height: 630,
+        // Must match the actual file's real pixel dimensions or some
+        // crawlers (Facebook/LinkedIn) will reject or mis-render the image.
+        width: 1728,
+        height: 910,
       },
     ],
   },
