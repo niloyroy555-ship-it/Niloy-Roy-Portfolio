@@ -38,23 +38,25 @@ export default function Contact() {
     }
   }
 
+  const inputCls = 'w-full rounded-2xl glass-chip px-4 py-3.5 text-fg outline-none transition-all placeholder:text-fg/35 focus:ring-2 focus:ring-brand/60'
+
   return (
-    <section id="contact" className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-24 md:px-8 md:py-36">
+    <section id="contact" className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-24 md:px-8 md:py-32">
       <div className="grid gap-14 md:grid-cols-[1fr_1fr] md:gap-20">
         <div>
           <Reveal>
-            <span className="mb-4 inline-flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-brand">
-              <span className="h-px w-8 bg-brand" /> Contact
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-brand">
+              Contact
             </span>
           </Reveal>
-          <h2 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl">
+          <h2 className="text-4xl font-semibold leading-[1.05] tracking-tight text-fg md:text-6xl">
             <TextReveal text="Let's create" />
             <br />
-            <TextReveal text="something" wordClass="text-white/40" delay={0.1} />{' '}
+            <TextReveal text="something" wordClass="text-gradient" delay={0.1} />{' '}
             <TextReveal text="memorable." delay={0.2} />
           </h2>
           <Reveal delay={0.2}>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-white/55">
+            <p className="mt-6 max-w-md text-base font-light leading-relaxed text-fg/55">
               Have a brand, a film or an idea in mind? I'm open to freelance and full-time work.
             </p>
           </Reveal>
@@ -63,23 +65,23 @@ export default function Contact() {
             <div className="mt-8 flex items-center gap-3">
               <span className="relative inline-block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/portrait.jpg" alt="Niloy Roy" className="h-12 w-12 rounded-full object-cover object-top ring-2 ring-white/15" />
-                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-ink-950 bg-emerald-400" />
+                <img src="/portrait.jpg" alt="Niloy Roy" className="h-12 w-12 rounded-full object-cover object-top ring-2 ring-fg/15" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-base bg-emerald-400" />
               </span>
               <div>
-                <p className="text-sm font-medium text-white/90">Niloy Roy</p>
-                <p className="text-xs text-emerald-400/90">Available for new projects</p>
+                <p className="text-sm font-medium text-fg/90">Niloy Roy</p>
+                <p className="text-xs text-emerald-500">Available for new projects</p>
               </div>
             </div>
           </Reveal>
 
           <div className="mt-10 space-y-3">
-            <a href={`mailto:${profile.email}`} data-cursor="link" className="flex items-center gap-3 text-white/70 transition-colors hover:text-white">
-              <span className="grid h-10 w-10 place-items-center rounded-full glass"><Mail size={17} /></span>
+            <a href={`mailto:${profile.email}`} data-cursor="link" className="flex items-center gap-3 text-fg/70 transition-colors hover:text-fg">
+              <span className="grid h-10 w-10 place-items-center rounded-full glass-chip"><Mail size={17} /></span>
               {profile.email}
             </a>
-            <a href={`tel:${profile.phone.replace(/\s/g, '')}`} data-cursor="link" className="flex items-center gap-3 text-white/70 transition-colors hover:text-white">
-              <span className="grid h-10 w-10 place-items-center rounded-full glass"><Phone size={17} /></span>
+            <a href={`tel:${profile.phone.replace(/\s/g, '')}`} data-cursor="link" className="flex items-center gap-3 text-fg/70 transition-colors hover:text-fg">
+              <span className="grid h-10 w-10 place-items-center rounded-full glass-chip"><Phone size={17} /></span>
               {profile.phone}
             </a>
           </div>
@@ -93,7 +95,7 @@ export default function Contact() {
                   rel="noopener noreferrer"
                   data-cursor="link"
                   aria-label={s.label}
-                  className="grid h-12 w-12 place-items-center rounded-full border border-white/12 text-sm font-medium text-white/80 transition-colors hover:border-brand hover:bg-brand hover:text-white"
+                  className="grid h-12 w-12 place-items-center rounded-full glass-chip text-sm font-medium text-fg/80 transition-all hover:text-fg hover:shadow-[0_8px_30px_rgba(109,141,255,0.35)]"
                 >
                   {s.label === 'Instagram' ? <Instagram size={18} /> : s.short}
                 </a>
@@ -104,25 +106,25 @@ export default function Contact() {
 
         {/* Form */}
         <Reveal delay={0.15}>
-          <form onSubmit={submit} className="rounded-3xl border border-white/10 glass p-6 md:p-8">
+          <form onSubmit={submit} className="rounded-[2.5rem] glass-panel p-6 md:p-8">
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40">Name</label>
-                <input value={form.name} onChange={update('name')} placeholder="Your name" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand" />
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Name</label>
+                <input value={form.name} onChange={update('name')} placeholder="Your name" className={inputCls} />
               </div>
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40">Email</label>
-                <input type="email" value={form.email} onChange={update('email')} placeholder="you@email.com" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand" />
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Email</label>
+                <input type="email" value={form.email} onChange={update('email')} placeholder="you@email.com" className={inputCls} />
               </div>
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40">Message</label>
-                <textarea value={form.message} onChange={update('message')} rows={4} placeholder="Tell me about your project…" className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-white outline-none transition-colors placeholder:text-white/30 focus:border-brand" />
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Message</label>
+                <textarea value={form.message} onChange={update('message')} rows={4} placeholder="Tell me about your project…" className={`${inputCls} resize-none`} />
               </div>
               <button
                 type="submit"
                 disabled={status !== 'idle'}
                 data-cursor="link"
-                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-white px-6 py-4 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] disabled:opacity-90"
+                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-500 to-violet2-500 px-6 py-4 text-sm font-semibold text-white shadow-[0_10px_40px_rgba(109,141,255,0.35)] transition-all hover:shadow-[0_14px_54px_rgba(109,141,255,0.5)] disabled:opacity-90"
               >
                 <AnimatePresence mode="wait">
                   {status === 'idle' && (
@@ -136,7 +138,7 @@ export default function Contact() {
                     </motion.span>
                   )}
                   {status === 'done' && (
-                    <motion.span key="done" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-brand-700">
+                    <motion.span key="done" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
                       <Check size={16} /> Sent!
                     </motion.span>
                   )}

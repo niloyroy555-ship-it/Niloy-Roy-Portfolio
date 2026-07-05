@@ -8,7 +8,18 @@ const nextConfig = {
   },
   // Renamed from experimental.serverComponentsExternalPackages in Next 15
   serverExternalPackages: ['mongodb'],
+  // @splinetool/react-spline v4 ships ESM-only exports; transpile so webpack resolves it
+  transpilePackages: ['@splinetool/react-spline'],
   webpack(config, { dev }) {
+    // @splinetool/react-spline v4 exports map lacks a "default" condition which
+    // breaks webpack resolution — alias straight to the dist ESM file.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@splinetool/react-spline': require('path').resolve(
+        __dirname,
+        'node_modules/@splinetool/react-spline/dist/react-spline.js'
+      ),
+    };
     if (dev) {
       // Reduce CPU/memory from file watching
       config.watchOptions = {

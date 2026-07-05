@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Toaster } from 'sonner'
 import SmoothScroll from '@/components/site/smooth-scroll'
 import CustomCursor from '@/components/site/custom-cursor'
+import SpatialBackground from '@/components/site/spatial-background'
+import IntroSplash from '@/components/site/intro-splash'
 import Nav from '@/components/site/nav'
 import Hero from '@/components/site/hero'
 import Marquee from '@/components/site/marquee'
@@ -16,16 +18,19 @@ import Footer from '@/components/site/footer'
 
 function App() {
   const [active, setActive] = useState(null)
+  // becomes true the moment the intro starts revealing the hero
+  const [heroReady, setHeroReady] = useState(false)
 
   return (
     <SmoothScroll>
-      <div className="relative bg-ink-950">
-        <div className="grain" aria-hidden />
+      <div className="relative min-h-screen">
+        <SpatialBackground />
         <CustomCursor />
-        <Toaster theme="dark" position="bottom-center" richColors />
+        <Toaster position="bottom-center" richColors />
+        <IntroSplash onReveal={() => setHeroReady(true)} />
         <Nav />
         <main>
-          <Hero />
+          <Hero ready={heroReady} />
           <Marquee />
           <Portfolio onOpen={setActive} />
           <About />

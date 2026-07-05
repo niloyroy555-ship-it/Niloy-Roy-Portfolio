@@ -90,8 +90,8 @@ export default function CustomCursor() {
             animate={{
               width: ringSize,
               height: ringSize,
-              backgroundColor: isLabel ? 'rgba(91,140,255,0.96)' : 'rgba(91,140,255,0)',
-              borderColor: isLabel ? 'rgba(91,140,255,0)' : 'rgba(255,255,255,0.5)',
+              backgroundColor: isLabel ? 'rgba(109,141,255,0.96)' : 'rgba(109,141,255,0)',
+              borderColor: isLabel ? 'rgba(109,141,255,0)' : 'rgba(140,150,190,0.6)',
               scale: down ? 0.8 : 1,
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 24 }}
