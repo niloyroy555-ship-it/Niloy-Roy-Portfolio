@@ -65,9 +65,7 @@ export default function ProjectModal({ project, onClose }) {
   }, [project, onClose])
 
   const heroIsVideo = project && project.type === 'video'
-  const heroFit = project?.modalFit || 'cover'
-  const heroStyle = { objectFit: heroFit, objectPosition: project?.modalCoverPosition || project?.coverPosition || 'center' }
-  const showHeroBackdrop = heroFit === 'contain'
+  const heroStyle = { objectPosition: project?.modalCoverPosition || project?.coverPosition || 'center' }
 
   return (
     <AnimatePresence mode="wait">
@@ -108,29 +106,18 @@ export default function ProjectModal({ project, onClose }) {
             </button>
 
             {/* Hero media */}
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-black">
-              {showHeroBackdrop && (
-                <RevealMedia
-                  type={heroIsVideo ? 'video' : 'image'}
-                  src={project.cover}
-                  poster={heroIsVideo ? project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg') : undefined}
-                  alt=""
-                  className="h-full w-full scale-110 object-cover opacity-35 blur-2xl"
-                  style={{ objectPosition: heroStyle.objectPosition }}
-                  videoProps={{ muted: true, loop: true, playsInline: true, autoPlay: false, preload: 'metadata' }}
-                />
-              )}
+            <div className="relative aspect-[16/9] w-full overflow-hidden">
               {heroIsVideo ? (
                 <RevealMedia
                   type="video"
                   src={project.cover}
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
-                  className="relative h-full w-full"
+                  className="h-full w-full object-cover"
                   style={heroStyle}
                   videoProps={{ autoPlay: !coarse, muted: true, loop: true, playsInline: true, controls: coarse, preload: coarse ? 'none' : 'metadata' }}
                 />
               ) : (
-                <RevealMedia type="image" src={project.cover} alt={project.title} className="relative h-full w-full" style={heroStyle} />
+                <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" style={heroStyle} />
               )}
 
               <div className="absolute bottom-6 left-6 right-6" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.5)' }}>
