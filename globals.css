@@ -128,6 +128,14 @@
     box-shadow: inset 0 1px 0 var(--glass-inner);
   }
 
+  /* Case-study galleries can run to 60-130+ images. Skip layout/style/paint
+     for items that are offscreen instead of paying for every backdrop-filter
+     blur layer at once the moment the modal opens. */
+  .gallery-item {
+    content-visibility: auto;
+    contain-intrinsic-size: 400px 300px;
+  }
+
   .text-gradient {
     background: linear-gradient(115deg, #9db6ff 0%, #c3b5ff 45%, #eef1ff 100%);
     -webkit-background-clip: text;
