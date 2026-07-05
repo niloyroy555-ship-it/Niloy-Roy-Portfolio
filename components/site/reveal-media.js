@@ -44,6 +44,28 @@ export default function RevealMedia({
     return () => clearTimeout(t)
   }, [type, src, coarse])
 
+  useEffect(() => {
+    if (type !== 'video') return
+    const el = mediaRef.current
+    const wrapper = ref.current
+    if (!el || !wrapper) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) return
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.play().catch(() => {}) // autoplay can be blocked pre-interaction; muted+playsInline covers most cases
+        } else {
+          el.pause()
+        }
+      },
+      { threshold: 0.25 }
+    )
+    io.observe(wrapper)
+    return () => io.disconnect()
+  }, [type, src])
+
   if (coarse) {
     return (
       <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
