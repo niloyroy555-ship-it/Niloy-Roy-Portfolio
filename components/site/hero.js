@@ -83,7 +83,11 @@ export default function Hero() {
           Available for freelance & full-time · {profile.location}
         </motion.div>
 
-        <h1
+        I found the problem immediately.
+
+You deleted the contents of the <h1>. You open it here:
+
+<h1
   className="
     font-graffiti
     whitespace-nowrap
@@ -98,6 +102,53 @@ export default function Hero() {
     select-none
   "
 >
+
+…and then you jump straight to:
+
+{/* morphing role */}
+
+There is no closing </h1>, which is exactly why Vercel is complaining.
+
+Replace your entire <h1> with this
+<h1
+  className="
+    font-graffiti
+    whitespace-nowrap
+    text-[22vw]
+    sm:text-[18vw]
+    md:text-[11rem]
+    lg:text-[13rem]
+    xl:text-[15rem]
+    leading-[0.82]
+    tracking-[-0.05em]
+    text-white
+    select-none
+  "
+>
+  <span className="sr-only">{profile.name}</span>
+
+  <span
+    aria-hidden
+    className="flex items-center justify-center whitespace-nowrap"
+  >
+    {letters.map((ch, i) => (
+      <motion.span
+        key={i}
+        initial={{ y: '120%', opacity: 0, rotateX: -70 }}
+        animate={{ y: '0%', opacity: 1, rotateX: 0 }}
+        transition={{
+          delay: 0.35 + i * 0.05,
+          duration: 0.9,
+          ease,
+        }}
+        className="inline-block"
+        style={{ transformOrigin: 'bottom' }}
+      >
+        {ch === ' ' ? '\u00A0' : ch}
+      </motion.span>
+    ))}
+  </span>
+</h1>
 
         {/* morphing role */}
         <div className="mt-6 flex h-9 items-center justify-center overflow-hidden md:h-11">
