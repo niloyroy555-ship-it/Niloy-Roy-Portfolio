@@ -10,14 +10,21 @@ export default function SmoothScroll({ children }) {
       'ontouchstart' in window ||
       navigator.maxTouchPoints > 0
 
-    if (reduce) return
+    // On touch devices, skip Lenis entirely and let the OS handle scrolling
+    // natively. syncTouch hijacks native touch/fling scrolling (which the
+    // browser already runs smoothly on the compositor thread, off main
+    // thread) and replaces it with a synthetic scroll driven by JS on every
+    // rAF tick — on real phones this is what "laggy scrolling" usually is.
+    // scrollToId()'s native window.scrollTo fallback below still gives
+    // smooth in-page nav links on touch devices.
+    if (reduce || touch) return
 
     const lenis = new Lenis({
       lerp: 0.09,
       smoothWheel: true,
-      syncTouch: true,
+      syncTouch: false,
       wheelMultiplier: 1,
-      touchMultiplier: touch ? 1.15 : 1.4,
+      touchMultiplier: 1.4,
     })
     window.__lenis = lenis
 

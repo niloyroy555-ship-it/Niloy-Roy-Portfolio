@@ -13,15 +13,12 @@ function posterFor(src) {
 }
 
 function Media({ project, className }) {
-  const coarse = useCoarsePointer()
   const style = { objectPosition: project.coverPosition || 'center' }
 
   if (project.type === 'video') {
-    // Mobile: show the lightweight poster instead of autoplaying the mp4.
-    // Tapping the card opens the case study where the video can be played.
-    if (coarse) {
-      return <RevealMedia type="image" src={posterFor(project.cover)} alt={project.title} className={className} style={style} />
-    }
+    // Videos autoplay muted on all devices, but only while their card is
+    // actually in view (see RevealMedia's IntersectionObserver) — so this
+    // doesn't mean every video on the page decoding at once.
     return (
       <RevealMedia
         type="video"
