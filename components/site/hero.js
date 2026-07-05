@@ -6,7 +6,6 @@ import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import Magnetic from './magnetic'
 import { profile } from '@/lib/portfolio-data'
 import { scrollToId } from './smooth-scroll'
-import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -15,7 +14,6 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 export default function Hero({ ready = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
   const ref = useRef(null)
-  const coarse = useCoarsePointer()
 
   // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
@@ -38,22 +36,30 @@ export default function Hero({ ready = true }) {
     return () => clearInterval(id)
   }, [])
 
-  // Gyroscope tilt on devices that expose orientation. Deliberately skipped
-  // on touch devices: on a handheld phone/tablet this fires continuously
-  // from ordinary hand tremor, driving 8 spring-animated 3D transforms on a
-  // full-bleed background image nonstop — the single biggest source of the
-  // "glitchy" feeling on real hardware, and invisible in desktop testing
-  // since there's no accelerometer to trigger it there.
+  // gyroscope tilt on devices that expose orientation (Android; iOS grants it
+  // silently on some browsers — if the OS withholds events we simply stay static)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce || coarse) return
+    if (reduce) return
     let listening = false
     let active = true
+    let pending = false
+    let latest = null
     const onOrient = (e) => {
       if (e.gamma == null || e.beta == null) return
-      // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
-      mx.set(clamp(e.gamma / 60, -0.5, 0.5))
-      my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
+      latest = e
+      // Android can fire deviceorientation 30-60x/sec; batching to one
+      // update per animation frame avoids recomputing the spring chain
+      // far more often than the screen can actually repaint.
+      if (pending) return
+      pending = true
+      requestAnimationFrame(() => {
+        pending = false
+        if (!latest) return
+        // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
+        mx.set(clamp(latest.gamma / 60, -0.5, 0.5))
+        my.set(clamp((latest.beta - 45) / 60, -0.5, 0.5))
+      })
     }
     const startListening = () => {
       if (listening || !active) return
@@ -83,10 +89,9 @@ export default function Hero({ ready = true }) {
       window.removeEventListener('pointerdown', unlockOrientation)
       if (listening) window.removeEventListener('deviceorientation', onOrient)
     }
-  }, [mx, my, coarse])
+  }, [mx, my])
 
   const onMove = (e) => {
-    if (coarse) return
     const rect = ref.current?.getBoundingClientRect()
     if (!rect) return
     mx.set((e.clientX - rect.left) / rect.width - 0.5)
@@ -192,16 +197,14 @@ export default function Hero({ ready = true }) {
             className="mt-9 flex flex-wrap items-center justify-center gap-4"
           >
             <Magnetic strength={0.5}>
-              <a
-                href={profile.socials.find((s) => s.label === 'Behance')?.href}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => scrollToId('#work')}
                 data-cursor="link"
                 className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-violet2-500 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_rgba(109,141,255,0.35)] transition-all hover:shadow-[0_14px_54px_rgba(109,141,255,0.5)]"
               >
                 View My Work
                 <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
+              </button>
             </Magnetic>
             <Magnetic strength={0.5}>
               <button

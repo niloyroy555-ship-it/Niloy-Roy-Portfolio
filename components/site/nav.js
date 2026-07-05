@@ -6,7 +6,6 @@ import { Menu, X, Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import Magnetic from './magnetic'
 import { scrollToId } from './smooth-scroll'
-import { useActiveSection } from '@/hooks/use-active-section'
 
 const links = [
   { label: 'Work', id: '#work' },
@@ -15,7 +14,6 @@ const links = [
   { label: 'Experience', id: '#experience' },
   { label: 'Contact', id: '#contact' },
 ]
-const sectionIds = links.map((l) => l.id)
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -48,7 +46,6 @@ function ThemeToggle() {
 
 export default function Nav() {
   const [open, setOpen] = useState(false)
-  const active = useActiveSection(sectionIds)
 
   const go = (id) => {
     setOpen(false)
@@ -73,31 +70,17 @@ export default function Nav() {
           </button>
 
           <nav className="hidden items-center gap-0.5 md:flex md:gap-1">
-            {links.map((l) => {
-              const isActive = active === l.id
-              return (
-                <button
-                  key={l.id}
-                  onClick={() => go(l.id)}
-                  data-cursor="link"
-                  className={`group relative rounded-full px-3 py-2 text-sm transition-colors lg:px-4 ${isActive ? 'text-fg' : 'text-fg/60 hover:text-fg'}`}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active-pill"
-                      className="absolute inset-0 rounded-full bg-fg/8"
-                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                    />
-                  )}
-                  <span className="relative">{l.label}</span>
-                  <span
-                    className={`absolute inset-x-4 -bottom-0.5 h-px origin-left bg-gradient-to-r from-brand to-violet2 transition-transform duration-300 ${
-                      isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-                    }`}
-                  />
-                </button>
-              )
-            })}
+            {links.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => go(l.id)}
+                data-cursor="link"
+                className="group relative rounded-full px-3 py-2 text-sm text-fg/60 transition-colors hover:text-fg lg:px-4"
+              >
+                {l.label}
+                <span className="absolute inset-x-4 -bottom-0.5 h-px origin-left scale-x-0 bg-gradient-to-r from-brand to-violet2 transition-transform duration-300 group-hover:scale-x-100" />
+              </button>
+            ))}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -128,20 +111,11 @@ export default function Nav() {
             exit={{ opacity: 0, y: -12 }}
             className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 md:hidden"
           >
-            {links.map((l) => {
-              const isActive = active === l.id
-              return (
-                <button
-                  key={l.id}
-                  onClick={() => go(l.id)}
-                  className={`block w-full rounded-2xl px-4 py-3 text-left text-base transition-colors ${
-                    isActive ? 'bg-fg/8 text-fg' : 'text-fg/80 hover:bg-fg/5'
-                  }`}
-                >
-                  {l.label}
-                </button>
-              )
-            })}
+            {links.map((l) => (
+              <button key={l.id} onClick={() => go(l.id)} className="block w-full rounded-2xl px-4 py-3 text-left text-base text-fg/80 hover:bg-fg/5">
+                {l.label}
+              </button>
+            ))}
             <button onClick={() => go('#contact')} className="mt-1 block w-full rounded-2xl bg-gradient-to-r from-brand-500 to-violet2-500 px-4 py-3 text-left text-base font-medium text-white">Let's talk</button>
           </motion.div>
         )}

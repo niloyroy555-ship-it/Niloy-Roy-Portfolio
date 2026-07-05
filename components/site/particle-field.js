@@ -25,8 +25,6 @@ export default function ParticleField({ className = '' }) {
     let height = 0
     let particles = []
     let raf = 0
-    let lastFrame = 0
-    const FRAME_BUDGET = 1000 / 60 // cap work to ~60fps even on 120/144Hz screens
 
     function makeParticles() {
       const isSmall = width < 640
@@ -51,13 +49,7 @@ export default function ParticleField({ className = '' }) {
       makeParticles()
     }
 
-    function step(now) {
-      if (now - lastFrame < FRAME_BUDGET) {
-        if (!reduceMotion) raf = requestAnimationFrame(step)
-        return
-      }
-      lastFrame = now
-
+    function step() {
       ctx.clearRect(0, 0, width, height)
 
       for (const p of particles) {
