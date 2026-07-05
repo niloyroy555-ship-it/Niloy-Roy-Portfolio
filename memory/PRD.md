@@ -23,5 +23,9 @@ Apple Vision Pro–inspired spatial 3D redesign:
 - Vision Pro scene contains the Spline template author's demo content ("Zeno Degenkamp" panels) — user may want to customize the scene in Spline and re-export.
 
 ## Not done / possible next steps
-- Frontend automated testing (awaiting user permission)
 - Replace demo content inside the Vision Pro Spline scene (must be done in Spline editor by user; re-extract scene.splinecode)
+
+## Update — HUD loader + cross-platform optimization (July 2025)
+- Loader splash background replaced with user-uploaded HUD bionic-arm wallpaper: /public/loader/ has loader-bg-1900/-960 in WebP+JPEG, served via <picture>, preloaded high-priority from layout head; dark scrim + glass pills keep spinner/"Tap anywhere to skip" readable. Spline distortion still fades in on top on capable desktops.
+- Optimizations: viewportFit cover + env(safe-area-inset-*) (nav, skip hint, hero arrow); 44px touch targets; tailwind future.hoverOnlyWhenSupported (iOS sticky hover); 16px inputs (iOS zoom); contact form id/label/autoComplete/inputMode; mobile shows video posters instead of autoplay mp4s (grid) and preload=none + controls in modal; spatial orb blur capped on mobile; 10 heavy JPGs recompressed (7.2MB→2.1MB); favicon app/icon.png + apple-icon.png generated; hero poster fixed (was 404); html/body overflow-x clip fix for mobile horizontal scroll (marquee).
+- Frontend tested by testing agent: all pass incl. mobile 390px overflow retest. Production build passes.
