@@ -79,9 +79,6 @@ export default function IntroSplash({ onReveal }) {
       return
     }
 
-    // Warm the hero scene cache while the intro plays
-    try { fetch('/scenes/vision-pro.splinecode', { cache: 'force-cache' }).catch(() => {}) } catch (e) { /* noop */ }
-
     if (isLowPower()) {
       setPhase('fallback')
       timers.current.push(setTimeout(finish, FALLBACK_MS))

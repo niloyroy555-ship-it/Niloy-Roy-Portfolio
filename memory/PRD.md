@@ -29,3 +29,10 @@ Apple Vision Pro–inspired spatial 3D redesign:
 - Loader splash background replaced with user-uploaded HUD bionic-arm wallpaper: /public/loader/ has loader-bg-1900/-960 in WebP+JPEG, served via <picture>, preloaded high-priority from layout head; dark scrim + glass pills keep spinner/"Tap anywhere to skip" readable. Spline distortion still fades in on top on capable desktops.
 - Optimizations: viewportFit cover + env(safe-area-inset-*) (nav, skip hint, hero arrow); 44px touch targets; tailwind future.hoverOnlyWhenSupported (iOS sticky hover); 16px inputs (iOS zoom); contact form id/label/autoComplete/inputMode; mobile shows video posters instead of autoplay mp4s (grid) and preload=none + controls in modal; spatial orb blur capped on mobile; 10 heavy JPGs recompressed (7.2MB→2.1MB); favicon app/icon.png + apple-icon.png generated; hero poster fixed (was 404); html/body overflow-x clip fix for mobile horizontal scroll (marquee).
 - Frontend tested by testing agent: all pass incl. mobile 390px overflow retest. Production build passes.
+
+## Update — Hero background swap to HUD image (July 2025)
+- Hero no longer uses the Vision Pro Spline scene. Background is now the same HUD bionic-arm image as the loader (reuses /public/loader/ WebP+JPEG <picture>, cover/center), with counter-parallax translate + subtle 3D rotate driven by mouse position AND deviceorientation (gyroscope, Android/desktop; iOS may withhold events without permission — degrades to static). Glass panel tilt unchanged (same mx/my springs).
+- Dark gradient + radial scrim over the image for text readability; tagline contrast bumped to fg/70.
+- Loading screen untouched (only removed the invisible 30MB scene warm-fetch).
+- Removed unused assets: /public/scenes/vision-pro.splinecode (30MB) and vision-pro-poster.jpg. Intro-distortion scene kept for the loader. To restore the 3D hero later, re-extract from https://my.spline.design/applevisionpro3dportfolioconcept-H1cXVDeIBhPqbNeliAxLVRWo/scene.splinecode.
+- Production build passes.

@@ -1,48 +1,55 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import Magnetic from './magnetic'
 import { profile } from '@/lib/portfolio-data'
 import { scrollToId } from './smooth-scroll'
 
-const Spline = dynamic(() => import('@splinetool/react-spline'), { ssr: false })
-
 const ease = [0.22, 1, 0.36, 1]
 
-function useLowPower() {
-  const [low, setLow] = useState(true)
-  useEffect(() => {
-    const coarse = window.matchMedia('(pointer: coarse)').matches
-    const small = window.innerWidth < 768
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const lowMem = navigator.deviceMemory && navigator.deviceMemory < 4
-    setLow(coarse || small || reduce || !!lowMem)
-  }, [])
-  return low
-}
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 
 export default function Hero({ ready = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
-  const [sceneLoaded, setSceneLoaded] = useState(false)
-  const [posterOk, setPosterOk] = useState(true)
-  const lowPower = useLowPower()
   const ref = useRef(null)
 
-  // gentle 3D tilt of the glass panel toward the cursor
+  // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
+
+  // glass panel: gentle 3D tilt toward the cursor / device orientation
   const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5, -5]), { stiffness: 110, damping: 20 })
   const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7, 7]), { stiffness: 110, damping: 20 })
   const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), { stiffness: 60, damping: 20 })
   const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 60, damping: 20 })
 
+  // background image: counter-parallax (moves opposite the panel for depth)
+  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18, -18]), { stiffness: 50, damping: 22 })
+  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 50, damping: 22 })
+  const bgRotX = useSpring(useTransform(my, [-0.5, 0.5], [-2.5, 2.5]), { stiffness: 50, damping: 22 })
+  const bgRotY = useSpring(useTransform(mx, [-0.5, 0.5], [2.5, -2.5]), { stiffness: 50, damping: 22 })
+
   useEffect(() => {
     const id = setInterval(() => setRoleIdx((i) => (i + 1) % profile.roles.length), 2400)
     return () => clearInterval(id)
   }, [])
+
+  // gyroscope tilt on devices that expose orientation (Android; iOS grants it
+  // silently on some browsers — if the OS withholds events we simply stay static)
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) return
+    const onOrient = (e) => {
+      if (e.gamma == null || e.beta == null) return
+      // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
+      mx.set(clamp(e.gamma / 60, -0.5, 0.5))
+      my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
+    }
+    window.addEventListener('deviceorientation', onOrient, { passive: true })
+    return () => window.removeEventListener('deviceorientation', onOrient)
+  }, [mx, my])
 
   const onMove = (e) => {
     const rect = ref.current?.getBoundingClientRect()
@@ -52,45 +59,36 @@ export default function Hero({ ready = true }) {
   }
   const onLeave = () => { mx.set(0); my.set(0) }
 
-  const showScene = ready && !lowPower
-
   return (
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
-      {/* ---- 3D Vision Pro scene / poster fallback ---- */}
-      <div className="absolute inset-0" aria-hidden>
-        {/* poster layer (always under the live scene; the only layer on mobile) */}
-        <AnimatePresence>
-          {!sceneLoaded && (
-            <motion.div key="poster" className="absolute inset-0" exit={{ opacity: 0 }} transition={{ duration: 1 }}>
-              {posterOk && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src="/scenes/vision-pro-poster.jpg"
-                  alt=""
-                  onError={() => setPosterOk(false)}
-                  className="h-full w-full object-cover"
-                />
-              )}
-              {!posterOk && <div className="intro-distort absolute inset-0" style={{ animationDuration: '9s' }} />}
-              {showScene && !sceneLoaded && (
-                <div className="absolute bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-fg/40">
-                  <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-brand" /> Loading 3D scene
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
+      <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
+        <motion.div
+          className="absolute inset-0"
+          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: 1.08, transformStyle: 'preserve-3d' }}
+        >
+          <picture>
+            <source
+              type="image/webp"
+              srcSet="/loader/loader-bg-960.webp 960w, /loader/loader-bg-1900.webp 1900w"
+              sizes="100vw"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/loader/loader-bg-1900.jpg"
+              srcSet="/loader/loader-bg-960.jpg 960w, /loader/loader-bg-1900.jpg 1900w"
+              sizes="100vw"
+              alt=""
+              fetchPriority="high"
+              decoding="async"
+              className="h-full w-full object-cover object-center"
+            />
+          </picture>
+        </motion.div>
 
-        {showScene && (
-          <motion.div
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: sceneLoaded ? 1 : 0 }}
-            transition={{ duration: 1.2, ease }}
-          >
-            <Spline scene="/scenes/vision-pro.splinecode" onLoad={() => setSceneLoaded(true)} style={{ width: '100%', height: '100%' }} />
-          </motion.div>
-        )}
+        {/* dark gradient scrim for text readability over the bright HUD areas */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_50%,rgba(0,0,0,0.28),transparent_75%)]" />
 
         {/* blend edges into the page background */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-base to-transparent" />
@@ -147,7 +145,7 @@ export default function Hero({ ready = true }) {
             initial={{ opacity: 0, y: 16 }}
             animate={ready ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.75, duration: 0.9 }}
-            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/55 md:text-base"
+            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 md:text-base"
           >
             {profile.tagline}
           </motion.p>
@@ -186,7 +184,7 @@ export default function Hero({ ready = true }) {
         initial={{ opacity: 0 }}
         animate={ready ? { opacity: 1 } : {}}
         transition={{ delay: 1.4 }}
-        className="absolute left-1/2 z-10 -translate-x-1/2 p-3 text-fg/40"
+        className="absolute left-1/2 z-10 -translate-x-1/2 p-3 text-white/60"
         style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
         aria-label="Scroll"
       >
