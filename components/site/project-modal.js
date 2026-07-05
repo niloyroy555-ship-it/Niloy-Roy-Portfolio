@@ -122,12 +122,12 @@ export default function ProjectModal({ project, onClose }) {
 
               <div className="absolute bottom-6 left-6 right-6" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.5)' }}>
                 <span className="mb-3 inline-block rounded-full glass-chip px-3 py-1 text-[11px] tracking-wide text-white/85">{project.category} · {project.year}</span>
-                <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white lg:text-5xl">{project.title}</h2>
+                <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">{project.title}</h2>
               </div>
             </div>
 
-            <div className="space-y-12 p-6 lg:p-10">
-              <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
+            <div className="space-y-12 p-6 md:p-8 lg:p-10">
+              <div className="grid gap-8 md:grid-cols-[1.4fr_1fr] md:gap-8 lg:gap-10">
                 <div>
                   <p className="mb-3 text-xs uppercase tracking-[0.25em] text-brand">Overview</p>
                   <p className="text-lg font-light leading-relaxed text-fg/75">{project.overview}</p>

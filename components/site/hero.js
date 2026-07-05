@@ -132,7 +132,7 @@ export default function Hero({ ready = true }) {
           initial={{ opacity: 0, y: 30, scale: 0.96 }}
           animate={ready ? { opacity: 1, y: 0, scale: 1 } : {}}
           transition={{ duration: 1, ease, delay: 0.15 }}
-          className="glass-panel rounded-[2rem] px-5 py-9 sm:px-6 md:rounded-[2.5rem] lg:px-14 lg:py-14"
+          className="glass-panel rounded-[2rem] px-5 py-9 sm:px-6 md:rounded-[2.5rem] md:px-9 md:py-11 lg:px-14 lg:py-14"
         >
           <motion.div
             initial={{ opacity: 0, y: 10 }}

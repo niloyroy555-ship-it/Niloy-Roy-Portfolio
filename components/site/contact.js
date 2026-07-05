@@ -42,7 +42,7 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-24 md:px-8 lg:py-32">
-      <div className="grid gap-14 lg:grid-cols-[1fr_1fr] lg:gap-20">
+      <div className="grid gap-10 md:grid-cols-[1fr_1fr] md:gap-10 lg:gap-20">
         <div>
           <Reveal>
             <span className="mb-4 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-brand">

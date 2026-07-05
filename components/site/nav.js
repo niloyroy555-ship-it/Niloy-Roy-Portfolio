@@ -69,13 +69,13 @@ export default function Nav() {
             <span className="text-sm font-medium tracking-tight text-fg/90">Niloy Roy</span>
           </button>
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-0.5 md:flex md:gap-1">
             {links.map((l) => (
               <button
                 key={l.id}
                 onClick={() => go(l.id)}
                 data-cursor="link"
-                className="group relative rounded-full px-4 py-2 text-sm text-fg/60 transition-colors hover:text-fg"
+                className="group relative rounded-full px-3 py-2 text-sm text-fg/60 transition-colors hover:text-fg lg:px-4"
               >
                 {l.label}
                 <span className="absolute inset-x-4 -bottom-0.5 h-px origin-left scale-x-0 bg-gradient-to-r from-brand to-violet2 transition-transform duration-300 group-hover:scale-x-100" />
@@ -96,7 +96,7 @@ export default function Nav() {
                 </button>
               </Magnetic>
             </div>
-            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg lg:hidden" aria-label="Menu">
+            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg md:hidden" aria-label="Menu">
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
@@ -109,7 +109,7 @@ export default function Nav() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 lg:hidden"
+            className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 md:hidden"
           >
             {links.map((l) => (
               <button key={l.id} onClick={() => go(l.id)} className="block w-full rounded-2xl px-4 py-3 text-left text-base text-fg/80 hover:bg-fg/5">

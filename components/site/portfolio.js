@@ -127,7 +127,7 @@ export default function Portfolio({ onOpen }) {
         </Reveal>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
         {projects.map((p, i) => (
           <ProjectCard key={p.id} project={p} index={i} onOpen={onOpen} />
         ))}

@@ -47,7 +47,7 @@ const pillGroups = [
 export default function About() {
   return (
     <section id="about" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-24 md:px-8 lg:py-32">
-      <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+      <div className="grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:gap-10 lg:gap-16">
         {/* Floating portrait */}
         <Reveal>
           <motion.div
@@ -92,7 +92,7 @@ export default function About() {
           </Reveal>
 
           {/* Stats */}
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
             {profile.stats.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.08}>
                 <div className="rounded-3xl glass-chip px-4 py-4 text-center">
