@@ -4,7 +4,7 @@ import { brands } from '@/lib/portfolio-data'
 
 function Row({ items, reverse = false, duration = '48s' }) {
   return (
-    <div className="flex overflow-hidden mask-fade-x" style={{ '--marquee-duration': duration }}>
+    <div className="flex w-full max-w-full overflow-hidden mask-fade-x" style={{ '--marquee-duration': duration, overflowX: 'clip' }}>
       <div className={`flex shrink-0 items-center gap-10 pr-10 ${reverse ? 'animate-marquee-reverse' : 'animate-marquee'}`}>
         {items.concat(items).map((b, i) => (
           <span key={i} className="flex items-center gap-10 whitespace-nowrap">
