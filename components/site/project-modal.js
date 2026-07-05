@@ -114,7 +114,14 @@ export default function ProjectModal({ project, onClose }) {
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
                   className="h-full w-full object-cover"
                   style={heroStyle}
-                  videoProps={{ autoPlay: !coarse, muted: true, loop: true, playsInline: true, controls: coarse, preload: coarse ? 'none' : 'metadata' }}
+                  videoProps={{
+                    autoPlay: !coarse || project.alwaysAutoplay,
+                    muted: true,
+                    loop: true,
+                    playsInline: true,
+                    controls: coarse,
+                    preload: project.alwaysAutoplay ? 'auto' : (coarse ? 'none' : 'metadata'),
+                  }}
                 />
               ) : (
                 <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" style={heroStyle} />

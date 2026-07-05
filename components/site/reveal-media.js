@@ -24,10 +24,17 @@ export default function RevealMedia({
   delay = 0,
   priority = false,
   style,
+  mediaRef: externalMediaRef,
 }) {
   const coarse = useCoarsePointer()
   const ref = useRef(null)
-  const mediaRef = useRef(null)
+  const internalMediaRef = useRef(null)
+  const setMediaRef = (el) => {
+    internalMediaRef.current = el
+    if (typeof externalMediaRef === 'function') externalMediaRef(el)
+    else if (externalMediaRef) externalMediaRef.current = el
+  }
+  const mediaRef = internalMediaRef
   const [loaded, setLoaded] = useState(false)
   const show = loaded
 
@@ -48,11 +55,11 @@ export default function RevealMedia({
     return (
       <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
         {type === 'video' ? (
-          <video ref={mediaRef} src={src} poster={poster} className={className} style={style} {...videoProps} />
+          <video ref={setMediaRef} src={src} poster={poster} className={className} style={style} {...videoProps} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            ref={mediaRef}
+            ref={setMediaRef}
             src={src}
             alt={alt}
             loading={priority ? 'eager' : 'lazy'}
@@ -77,7 +84,7 @@ export default function RevealMedia({
       >
         {type === 'video' ? (
           <video
-            ref={mediaRef}
+            ref={setMediaRef}
             src={src}
             poster={poster}
             onLoadedData={() => setLoaded(true)}
@@ -89,7 +96,7 @@ export default function RevealMedia({
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            ref={mediaRef}
+            ref={setMediaRef}
             src={src}
             alt={alt}
             loading={priority ? 'eager' : 'lazy'}
