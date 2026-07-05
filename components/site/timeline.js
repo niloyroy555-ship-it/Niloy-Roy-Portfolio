@@ -45,24 +45,40 @@ export default function Timeline() {
                   <span className="h-2 w-2 rounded-full bg-brand shadow-[0_0_14px_rgba(109,141,255,0.9)]" />
                 </span>
 
-                <motion.div
-                  initial={coarse ? false : { opacity: 0, x: right ? 40 : -40, y: 20 }}
-                  whileInView={coarse ? undefined : { opacity: 1, x: 0, y: 0 }}
-                  viewport={{ once: true, margin: '-80px' }}
-                  transition={{ duration: 0.75, ease }}
-                  whileHover={coarse ? undefined : { y: -4 }}
-                  className={`rounded-[1.75rem] glass-card p-6 md:my-4 ${right ? 'md:col-start-2' : 'md:col-start-1 md:text-right'}`}
-                >
-                  <span className="text-xs font-medium text-brand">{job.period}</span>
-                  <h3 className="mt-2 text-xl font-semibold tracking-tight text-fg">{job.company}</h3>
-                  <p className="text-sm font-light text-fg/55">{job.role}</p>
-                  <p className="mt-3 text-sm font-light leading-relaxed text-fg/60">{job.desc}</p>
-                  <div className={`mt-4 flex flex-wrap gap-2 ${right ? '' : 'md:justify-end'}`}>
-                    {job.tags.map((t) => (
-                      <span key={t} className="rounded-full glass-chip px-2.5 py-1 text-[11px] text-fg/65">{t}</span>
-                    ))}
+                {coarse ? (
+                  <div
+                    className={`rounded-[1.75rem] glass-card p-6 md:my-4 ${right ? 'md:col-start-2' : 'md:col-start-1 md:text-right'}`}
+                  >
+                    <span className="text-xs font-medium text-brand">{job.period}</span>
+                    <h3 className="mt-2 text-xl font-semibold tracking-tight text-fg">{job.company}</h3>
+                    <p className="text-sm font-light text-fg/55">{job.role}</p>
+                    <p className="mt-3 text-sm font-light leading-relaxed text-fg/60">{job.desc}</p>
+                    <div className={`mt-4 flex flex-wrap gap-2 ${right ? '' : 'md:justify-end'}`}>
+                      {job.tags.map((t) => (
+                        <span key={t} className="rounded-full glass-chip px-2.5 py-1 text-[11px] text-fg/65">{t}</span>
+                      ))}
+                    </div>
                   </div>
-                </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, x: right ? 40 : -40, y: 20 }}
+                    whileInView={{ opacity: 1, x: 0, y: 0 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.75, ease }}
+                    whileHover={{ y: -4 }}
+                    className={`rounded-[1.75rem] glass-card p-6 md:my-4 ${right ? 'md:col-start-2' : 'md:col-start-1 md:text-right'}`}
+                  >
+                    <span className="text-xs font-medium text-brand">{job.period}</span>
+                    <h3 className="mt-2 text-xl font-semibold tracking-tight text-fg">{job.company}</h3>
+                    <p className="text-sm font-light text-fg/55">{job.role}</p>
+                    <p className="mt-3 text-sm font-light leading-relaxed text-fg/60">{job.desc}</p>
+                    <div className={`mt-4 flex flex-wrap gap-2 ${right ? '' : 'md:justify-end'}`}>
+                      {job.tags.map((t) => (
+                        <span key={t} className="rounded-full glass-chip px-2.5 py-1 text-[11px] text-fg/65">{t}</span>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </div>
             )
           })}
