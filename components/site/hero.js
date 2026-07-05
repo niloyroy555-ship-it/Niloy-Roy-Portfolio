@@ -40,39 +40,19 @@ export default function Hero() {
       
       <div className="hero-grid" />
 
-      {/* Background Grid + Ambient Gradients */}
-<div className="pointer-events-none absolute inset-0">
-
-  {/* Grid */}
-  <div
-    className="absolute inset-0 opacity-100"
-    style={{
-      backgroundImage: `
-        linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
-      `,
-      backgroundSize: "80px 80px",
-    }}
-  />
-
-  {/* Glow */}
-  <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
-
-  <div
-    className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[55px] animate-aurora md:blur-[110px]"
-    style={{ animationDelay: "-6s" }}
-  />
-
-  <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
-
-</div>
+      {/* ambient gradients */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
+        <div className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[55px] animate-aurora md:blur-[110px]" style={{ animationDelay: '-6s' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
+      </div>
 
       <ParticleField className="absolute inset-0 h-full w-full" />
 
-     <motion.div
-  style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
-  className="relative z-10 mx-auto w-full max-w-7xl px-6 text-center"
->
+      <motion.div
+        style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
+        className="relative z-10 mx-auto max-w-5xl px-6 text-center"
+      >
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,72 +63,23 @@ export default function Hero() {
           Available for freelance & full-time · {profile.location}
         </motion.div>
 
-        I found the problem immediately.
-
-You deleted the contents of the <h1>. You open it here:
-
-<h1
-  className="
-    font-graffiti
-    whitespace-nowrap
-    text-[22vw]
-    sm:text-[18vw]
-    md:text-[11rem]
-    lg:text-[13rem]
-    xl:text-[15rem]
-    leading-[0.82]
-    tracking-[-0.05em]
-    text-white
-    select-none
-  "
->
-
-…and then you jump straight to:
-
-{/* morphing role */}
-
-There is no closing </h1>, which is exactly why Vercel is complaining.
-
-Replace your entire <h1> with this
-<h1
-  className="
-    font-graffiti
-    whitespace-nowrap
-    text-[22vw]
-    sm:text-[18vw]
-    md:text-[11rem]
-    lg:text-[13rem]
-    xl:text-[15rem]
-    leading-[0.82]
-    tracking-[-0.05em]
-    text-white
-    select-none
-  "
->
-  <span className="sr-only">{profile.name}</span>
-
-  <span
-    aria-hidden
-    className="flex items-center justify-center whitespace-nowrap"
-  >
-    {letters.map((ch, i) => (
-      <motion.span
-        key={i}
-        initial={{ y: '120%', opacity: 0, rotateX: -70 }}
-        animate={{ y: '0%', opacity: 1, rotateX: 0 }}
-        transition={{
-          delay: 0.35 + i * 0.05,
-          duration: 0.9,
-          ease,
-        }}
-        className="inline-block"
-        style={{ transformOrigin: 'bottom' }}
-      >
-        {ch === ' ' ? '\u00A0' : ch}
-      </motion.span>
-    ))}
-  </span>
-</h1>
+        <h1 className="font-graffiti text-[22vw] sm:text-[20vw] md:text-[16rem] lg:text-[20rem] leading-[0.9] tracking-normal text-white">
+          <span className="sr-only">{profile.name}</span>
+          <span aria-hidden className="flex flex-wrap items-center justify-center">
+            {letters.map((ch, i) => (
+              <motion.span
+                key={i}
+                initial={{ y: '120%', opacity: 0, rotateX: -70 }}
+                animate={{ y: '0%', opacity: 1, rotateX: 0 }}
+                transition={{ delay: 0.35 + i * 0.05, duration: 0.9, ease }}
+                className="inline-block"
+                style={{ transformOrigin: 'bottom' }}
+              >
+                {ch === ' ' ? '\u00A0' : ch}
+              </motion.span>
+            ))}
+          </span>
+        </h1>
 
         {/* morphing role */}
         <div className="mt-6 flex h-9 items-center justify-center overflow-hidden md:h-11">
