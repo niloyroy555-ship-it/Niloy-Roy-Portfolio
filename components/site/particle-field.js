@@ -50,7 +50,7 @@ export default function ParticleField({ className = '' }) {
     resize()
 
     const count = isMobile
-      ? Math.min(20, Math.floor((width * height) / 42000))
+      ? Math.min(14, Math.floor((width * height) / 52000))
       : Math.min(60, Math.floor((width * height) / 22000))
     const linkDist = isMobile ? 85 : 110
     const influenceDist = isMobile ? 100 : 130
@@ -81,8 +81,8 @@ export default function ParticleField({ className = '' }) {
     }
     window.addEventListener('resize', resize)
 
-    const MAX_FPS = isMobile ? 30 : 60
-    const MIN_FPS = isMobile ? 15 : 24
+    const MAX_FPS = isMobile ? 24 : 60
+    const MIN_FPS = isMobile ? 12 : 24
     let targetFps = MAX_FPS
     let frameInterval = 1000 / targetFps
     let lastFrameTime = 0

@@ -2,12 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 const ease = [0.22, 1, 0.36, 1]
-const curtainEase = [0.85, 0, 0.15, 1]
 
-// Cinematic media reveal: scale + blur-out with a curtain wipe, on enter-view + load.
-// Optimized for smooth 60fps performance
+// Cinematic media reveal: opacity fade-in on enter-view + load, on desktop.
+//
+// On touch devices the fade is skipped entirely and media just renders
+// normally — no motion.div wrapper, no loaded-state gate. This matters most
+// for the case-study galleries, where dozens of images/videos can mount at
+// once; removing the per-item animated state there is a meaningful chunk of
+// avoidable JS work on a phone opening that modal.
 export default function RevealMedia({
   src,
   type = 'image',
@@ -20,18 +25,14 @@ export default function RevealMedia({
   priority = false,
   style,
 }) {
+  const coarse = useCoarsePointer()
   const ref = useRef(null)
   const mediaRef = useRef(null)
   const [loaded, setLoaded] = useState(false)
-  // Reveal purely on "media finished loading" — no separate scroll-intersection
-  // trigger here. RevealMedia is almost always nested inside a <Reveal> (or an
-  // already-visible modal), which owns the "has this scrolled into view" timing.
-  // A second, independent IntersectionObserver with a slightly different trigger
-  // margin caused a mistimed double-reveal (card fades in, then a beat later the
-  // curtain wipes) that read as a blink.
   const show = loaded
 
   useEffect(() => {
+    if (coarse) return // mobile renders immediately, no load-gating needed
     // Handle already-cached/complete media that won't fire load events.
     const el = mediaRef.current
     if (el) {
@@ -41,7 +42,29 @@ export default function RevealMedia({
     // Safety net: never leave media hidden behind the curtain.
     const t = setTimeout(() => setLoaded(true), 800)
     return () => clearTimeout(t)
-  }, [type, src])
+  }, [type, src, coarse])
+
+  if (coarse) {
+    return (
+      <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
+        {type === 'video' ? (
+          <video ref={mediaRef} src={src} poster={poster} className={className} style={style} {...videoProps} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            ref={mediaRef}
+            src={src}
+            alt={alt}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            decoding="async"
+            className={className}
+            style={style}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
@@ -79,6 +102,6 @@ export default function RevealMedia({
           />
         )}
       </motion.div>
-      </div>
+    </div>
   )
 }

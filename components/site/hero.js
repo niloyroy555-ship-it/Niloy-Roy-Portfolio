@@ -2,30 +2,54 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight, ArrowDown } from 'lucide-react'
-import ParticleField from './particle-field'
+import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import Magnetic from './magnetic'
 import { profile } from '@/lib/portfolio-data'
 import { scrollToId } from './smooth-scroll'
 
 const ease = [0.22, 1, 0.36, 1]
-const letters = profile.name.split('')
-const behanceUrl = profile.socials.find((s) => s.label === 'Behance')?.href
 
-export default function Hero() {
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
+
+export default function Hero({ ready = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
   const ref = useRef(null)
 
-  // subtle 3D bend toward cursor
+  // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
-  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [6, -6]), { stiffness: 120, damping: 20 })
-  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-8, 8]), { stiffness: 120, damping: 20 })
+
+  // glass panel: gentle 3D tilt toward the cursor / device orientation
+  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5, -5]), { stiffness: 110, damping: 20 })
+  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7, 7]), { stiffness: 110, damping: 20 })
+  const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), { stiffness: 60, damping: 20 })
+  const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 60, damping: 20 })
+
+  // background image: counter-parallax (moves opposite the panel for depth)
+  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18, -18]), { stiffness: 50, damping: 22 })
+  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 50, damping: 22 })
+  const bgRotX = useSpring(useTransform(my, [-0.5, 0.5], [-2.5, 2.5]), { stiffness: 50, damping: 22 })
+  const bgRotY = useSpring(useTransform(mx, [-0.5, 0.5], [2.5, -2.5]), { stiffness: 50, damping: 22 })
 
   useEffect(() => {
     const id = setInterval(() => setRoleIdx((i) => (i + 1) % profile.roles.length), 2400)
     return () => clearInterval(id)
   }, [])
+
+  // gyroscope tilt on devices that expose orientation (Android; iOS grants it
+  // silently on some browsers — if the OS withholds events we simply stay static)
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) return
+    const onOrient = (e) => {
+      if (e.gamma == null || e.beta == null) return
+      // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
+      mx.set(clamp(e.gamma / 60, -0.5, 0.5))
+      my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
+    }
+    window.addEventListener('deviceorientation', onOrient, { passive: true })
+    return () => window.removeEventListener('deviceorientation', onOrient)
+  }, [mx, my])
 
   const onMove = (e) => {
     const rect = ref.current?.getBoundingClientRect()
@@ -37,121 +61,131 @@ export default function Hero() {
 
   return (
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
-      
-      <div className="hero-grid" />
-
-     {/* Background Grid + Ambient Gradients */}
-<div className="pointer-events-none absolute inset-0">
-
-  {/* Grid */}
-  <div
-    className="absolute inset-0 opacity-100"
-    style={{
-      backgroundImage: `
-        linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
-      `,
-      backgroundSize: "80px 80px",
-    }}
-  />
-
-  {/* Glow */}
-  <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
-
-  <div
-    className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[55px] animate-aurora md:blur-[110px]"
-    style={{ animationDelay: "-6s" }}
-  />
-
-  <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
-
-</div>
-
-      <ParticleField className="absolute inset-0 h-full w-full" />
-
-      <motion.div
-        style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
-        className="relative z-10 mx-auto max-w-5xl px-6 text-center"
-      >
+      {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
+      <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs text-white/70"
+          className="absolute inset-0"
+          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: 1.08, transformStyle: 'preserve-3d' }}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-          Available for freelance & full-time · {profile.location}
+          <picture>
+            <source
+              type="image/webp"
+              srcSet="/loader/loader-bg-960.webp 960w, /loader/loader-bg-1900.webp 1900w"
+              sizes="100vw"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/loader/loader-bg-1900.jpg"
+              srcSet="/loader/loader-bg-960.jpg 960w, /loader/loader-bg-1900.jpg 1900w"
+              sizes="100vw"
+              alt=""
+              fetchPriority="high"
+              decoding="async"
+              className="h-full w-full object-cover object-center"
+            />
+          </picture>
         </motion.div>
 
-        <h1 className="font-graffiti text-[26vw] sm:text-[22vw] md:text-[18rem] lg:text-[20rem] leading-[0.9] tracking-normal text-white">
-          <span className="sr-only">{profile.name}</span>
-          <span aria-hidden className="flex flex-wrap items-center justify-center">
-            {letters.map((ch, i) => (
-              <motion.span
-                key={i}
-                initial={{ y: '120%', opacity: 0, rotateX: -70 }}
-                animate={{ y: '0%', opacity: 1, rotateX: 0 }}
-                transition={{ delay: 0.35 + i * 0.05, duration: 0.9, ease }}
-                className="inline-block"
-                style={{ transformOrigin: 'bottom' }}
-              >
-                {ch === ' ' ? '\u00A0' : ch}
-              </motion.span>
-            ))}
-          </span>
-        </h1>
+        {/* dark gradient scrim for text readability over the bright HUD areas */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_50%,rgba(0,0,0,0.28),transparent_75%)]" />
 
-        {/* morphing role */}
-        <div className="mt-6 flex h-9 items-center justify-center overflow-hidden md:h-11">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={roleIdx}
-              initial={{ y: '100%', opacity: 0, filter: 'blur(6px)' }}
-              animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
-              exit={{ y: '-100%', opacity: 0, filter: 'blur(6px)' }}
-              transition={{ duration: 0.6, ease }}
-              className="bg-gradient-to-r from-white via-white to-brand-200 bg-clip-text text-xl font-medium text-transparent md:text-3xl"
-            >
-              {profile.roles[roleIdx]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
+        {/* blend edges into the page background */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-base to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-base/60 to-transparent" />
+      </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.9 }}
-          className="mx-auto mt-6 max-w-xl text-balance text-sm leading-relaxed text-white/55 md:text-base"
-        >
-          {profile.tagline}
-        </motion.p>
-
+      {/* ---- floating glass panel ---- */}
+      <motion.div
+        style={{ rotateX: rotX, rotateY: rotY, x: panelX, y: panelY, transformPerspective: 1400 }}
+        className="relative z-10 mx-auto w-[92%] max-w-2xl px-2 py-24 text-center md:px-0"
+      >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 0.9 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-4"
+          initial={{ opacity: 0, y: 30, scale: 0.96 }}
+          animate={ready ? { opacity: 1, y: 0, scale: 1 } : {}}
+          transition={{ duration: 1, ease, delay: 0.15 }}
+          className="glass-panel rounded-[2.5rem] px-6 py-10 md:px-14 md:py-14"
         >
-          <Magnetic strength={0.5}>
-            <a href={behanceUrl} target="_blank" rel="noopener noreferrer" data-cursor="link" className="group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.25)]">
-              View Portfolio
-              <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
-          </Magnetic>
-          <Magnetic strength={0.5}>
-            <button onClick={() => scrollToId('#contact')} data-cursor="link" className="rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/5">
-              Contact Me
-            </button>
-          </Magnetic>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.45, duration: 0.8 }}
+            className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs text-fg/70"
+          >
+            <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-emerald-400" />
+            Available for freelance &amp; full-time · {profile.location}
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
+            animate={ready ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+            transition={{ delay: 0.35, duration: 1, ease }}
+            className="text-5xl font-semibold tracking-tight text-fg sm:text-6xl md:text-7xl"
+          >
+            {profile.firstName} <span className="text-gradient">{profile.lastName}</span>
+          </motion.h1>
+
+          {/* morphing role */}
+          <div className="mt-5 flex h-8 items-center justify-center overflow-hidden md:h-10">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={roleIdx}
+                initial={{ y: '100%', opacity: 0, filter: 'blur(6px)' }}
+                animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
+                exit={{ y: '-100%', opacity: 0, filter: 'blur(6px)' }}
+                transition={{ duration: 0.6, ease }}
+                className="text-lg font-light text-fg/75 md:text-2xl"
+              >
+                {profile.roles[roleIdx]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.75, duration: 0.9 }}
+            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 md:text-base"
+          >
+            {profile.tagline}
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.9, duration: 0.9 }}
+            className="mt-9 flex flex-wrap items-center justify-center gap-4"
+          >
+            <Magnetic strength={0.5}>
+              <button
+                onClick={() => scrollToId('#work')}
+                data-cursor="link"
+                className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-violet2-500 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_rgba(109,141,255,0.35)] transition-all hover:shadow-[0_14px_54px_rgba(109,141,255,0.5)]"
+              >
+                View My Work
+                <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </button>
+            </Magnetic>
+            <Magnetic strength={0.5}>
+              <button
+                onClick={() => scrollToId('#contact')}
+                data-cursor="link"
+                className="rounded-full glass-chip px-7 py-3.5 text-sm font-semibold text-fg transition-colors hover:bg-fg/5"
+              >
+                Contact Me
+              </button>
+            </Magnetic>
+          </motion.div>
         </motion.div>
       </motion.div>
 
       <motion.button
         onClick={() => scrollToId('#work')}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={ready ? { opacity: 1 } : {}}
         transition={{ delay: 1.4 }}
-        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-white/40"
+        className="absolute left-1/2 z-10 -translate-x-1/2 p-3 text-white/60"
+        style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
         aria-label="Scroll"
       >
         <motion.span animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }} className="block">

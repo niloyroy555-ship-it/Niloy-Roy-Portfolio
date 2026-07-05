@@ -49,12 +49,21 @@ export const viewport = {
   themeColor: '#08080A',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${grotesk.variable} ${graffiti.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${grotesk.variable} ${graffiti.variable}`}>
       <head>
+        {/* Preload the loader wallpaper so the splash paints instantly (WebP; JPEG fallback is only fetched by legacy browsers) */}
+        <link
+          rel="preload"
+          as="image"
+          imageSrcSet="/loader/loader-bg-960.webp 960w, /loader/loader-bg-1900.webp 1900w"
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
         <script dangerouslySetInnerHTML={{__html:'window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);'}} />
       </head>
       <body>
