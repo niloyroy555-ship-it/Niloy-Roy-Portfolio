@@ -160,7 +160,7 @@
   }
 }
 
-/* Compact screens: lighter blur so tablets and phones never jank */
+/* Compact screens keep the animated experience, with lighter blur for comfort */
 @media (max-width: 1023px) {
   .glass, .glass-panel, .glass-card, .glass-chip {
     backdrop-filter: blur(8px) saturate(140%);
@@ -175,9 +175,6 @@
      scrolled far away — on phones we keep them as a static glow instead,
      removing a continuous compositor cost for essentially no visible loss
      (it was a slow, subtle drift to begin with) */
-  .spatial-orb.animate-aurora {
-    animation: none;
-  }
   /* the nav bar is `position: fixed`, so unlike every other glass surface
      it's on-screen and re-compositing its backdrop blur on every single
      scroll frame for the entire session — give it the lightest possible

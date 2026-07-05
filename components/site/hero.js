@@ -40,16 +40,43 @@ export default function Hero({ ready = true }) {
   // silently on some browsers — if the OS withholds events we simply stay static)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const compact = window.innerWidth < 1024 || navigator.maxTouchPoints > 0
-    if (reduce || compact) return
+    if (reduce) return
+    let listening = false
+    let active = true
     const onOrient = (e) => {
       if (e.gamma == null || e.beta == null) return
       // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
       mx.set(clamp(e.gamma / 60, -0.5, 0.5))
       my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
     }
-    window.addEventListener('deviceorientation', onOrient, { passive: true })
-    return () => window.removeEventListener('deviceorientation', onOrient)
+    const startListening = () => {
+      if (listening || !active) return
+      window.addEventListener('deviceorientation', onOrient, { passive: true })
+      listening = true
+    }
+
+    const unlockOrientation = async () => {
+      const Orientation = window.DeviceOrientationEvent
+      if (Orientation && typeof Orientation.requestPermission === 'function') {
+        try {
+          const result = await Orientation.requestPermission()
+          if (result === 'granted') startListening()
+        } catch (e) {
+          // If permission is denied or unavailable, pointer parallax still works.
+        }
+      } else {
+        startListening()
+      }
+    }
+
+    unlockOrientation()
+    window.addEventListener('pointerdown', unlockOrientation, { passive: true, once: true })
+
+    return () => {
+      active = false
+      window.removeEventListener('pointerdown', unlockOrientation)
+      if (listening) window.removeEventListener('deviceorientation', onOrient)
+    }
   }, [mx, my])
 
   const onMove = (e) => {

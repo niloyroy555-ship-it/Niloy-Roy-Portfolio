@@ -14,11 +14,8 @@ const FALLBACK_MS = 2000 // static splash duration on low-power devices
 
 function isLowPower() {
   if (typeof window === 'undefined') return true
-  const coarse = window.matchMedia('(pointer: coarse)').matches
-  const small = window.innerWidth < 768
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const lowMem = typeof navigator !== 'undefined' && navigator.deviceMemory && navigator.deviceMemory < 4
-  return coarse || small || reduce || !!lowMem
+  return reduce
 }
 
 // HUD wallpaper: full-bleed, responsive (WebP + JPEG fallback), preloaded from layout head.

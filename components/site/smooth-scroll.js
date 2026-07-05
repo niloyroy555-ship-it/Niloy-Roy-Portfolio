@@ -9,15 +9,15 @@ export default function SmoothScroll({ children }) {
     const touch =
       'ontouchstart' in window ||
       navigator.maxTouchPoints > 0
-    const compact = window.innerWidth < 1024
 
-    if (reduce || touch || compact) return
+    if (reduce) return
 
     const lenis = new Lenis({
       lerp: 0.09,
       smoothWheel: true,
+      syncTouch: true,
       wheelMultiplier: 1,
-      touchMultiplier: 1.4,
+      touchMultiplier: touch ? 1.15 : 1.4,
     })
     window.__lenis = lenis
 
