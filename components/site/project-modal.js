@@ -138,7 +138,10 @@ export default function ProjectModal({ project, onClose }) {
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
                   className="h-full w-full object-cover"
                   style={heroStyle}
+<<<<<<< HEAD
                   alwaysPlay={project.alwaysPlay}
+=======
+>>>>>>> f69771874bd7f9404430d48b232de109ece0a6f9
                   videoProps={{ autoPlay: true, muted: true, loop: true, playsInline: true, controls: coarse, preload: 'metadata' }}
                 />
               ) : (

@@ -74,6 +74,23 @@ export default function ProjectModal({ project, onClose }) {
   const heroIsVideo = project && project.type === 'video'
   const heroStyle = { objectPosition: project?.modalCoverPosition || project?.coverPosition || 'center' }
 
+  // The scale-up entrance looks great on desktop, but on Android animating
+  // `scale` on a container that has an actively-decoding <video> inside it
+  // triggers a well-known hardware-video-surface bug: the decoder briefly
+  // drops a solid white frame mid-transform. A plain fade+rise (no scale)
+  // sidesteps it entirely and is what touch devices get instead.
+  const panelMotion = coarse
+    ? {
+        initial: { opacity: 0, y: 16 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: 16 },
+      }
+    : {
+        initial: { scale: 0.95, opacity: 0, y: 20 },
+        animate: { scale: 1, opacity: 1, y: 0 },
+        exit: { scale: 0.95, opacity: 0, y: 20 },
+      }
+
   return (
     <AnimatePresence mode="wait">
       {project && (
@@ -96,9 +113,9 @@ export default function ProjectModal({ project, onClose }) {
             transition={{ duration: 0.35 }}
           />
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            initial={panelMotion.initial}
+            animate={panelMotion.animate}
+            exit={panelMotion.exit}
             transition={{ duration: 0.4, ease }}
             className="relative mx-auto my-6 w-[94%] max-w-5xl overflow-hidden rounded-[2rem] glass-panel lg:my-12 lg:rounded-[2.5rem]"
             style={{ willChange: 'transform, opacity' }}
@@ -121,7 +138,8 @@ export default function ProjectModal({ project, onClose }) {
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
                   className="h-full w-full object-cover"
                   style={heroStyle}
-                  videoProps={{ autoPlay: !coarse, muted: true, loop: true, playsInline: true, controls: coarse, preload: coarse ? 'none' : 'metadata' }}
+                  alwaysPlay={project.alwaysPlay}
+                  videoProps={{ autoPlay: true, muted: true, loop: true, playsInline: true, controls: coarse, preload: 'metadata' }}
                 />
               ) : (
                 <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" style={heroStyle} />

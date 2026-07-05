@@ -46,10 +46,14 @@ export default function RevealMedia({
   }, [type, src, coarse])
 
   useEffect(() => {
+<<<<<<< HEAD
     // alwaysPlay videos (currently: the two hero case-study covers called
     // out by name) skip this entirely — no pausing when scrolled out of
     // view, they just run on their native autoPlay+loop attributes forever.
     if (type !== 'video' || alwaysPlay) return
+=======
+    if (type !== 'video') return
+>>>>>>> f69771874bd7f9404430d48b232de109ece0a6f9
     const el = mediaRef.current
     const wrapper = ref.current
     if (!el || !wrapper) return
@@ -68,7 +72,11 @@ export default function RevealMedia({
     )
     io.observe(wrapper)
     return () => io.disconnect()
+<<<<<<< HEAD
   }, [type, src, alwaysPlay])
+=======
+  }, [type, src])
+>>>>>>> f69771874bd7f9404430d48b232de109ece0a6f9
 
   if (coarse) {
     return (
