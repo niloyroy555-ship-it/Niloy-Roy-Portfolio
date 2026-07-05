@@ -8,6 +8,10 @@ module.exports = {
       './src/**/*.{js,jsx}',
     ],
     prefix: "",
+    future: {
+      // avoids sticky :hover states on iOS / touch devices
+      hoverOnlyWhenSupported: true,
+    },
     theme: {
       container: {
         center: true,

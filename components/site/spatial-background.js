@@ -53,7 +53,7 @@ export default function SpatialBackground() {
       <motion.div style={parallax ? { x: l3x, y: l3y } : undefined} className="absolute inset-0">
         <motion.div style={{ y: scroll2 }} className="absolute inset-0">
           <div
-            className="absolute left-[8%] top-[55%] h-[46vh] w-[46vh] rounded-full blur-[90px]"
+            className="spatial-orb absolute left-[8%] top-[55%] h-[46vh] w-[46vh] rounded-full blur-[90px]"
             style={{ background: 'var(--orb-silver)' }}
           />
         </motion.div>
@@ -63,7 +63,7 @@ export default function SpatialBackground() {
       <motion.div style={parallax ? { x: l2x, y: l2y } : undefined} className="absolute inset-0">
         <motion.div style={{ y: scroll1 }} className="absolute inset-0">
           <div
-            className="absolute right-[6%] top-[12%] h-[52vh] w-[52vh] rounded-full blur-[100px] animate-aurora"
+            className="spatial-orb absolute right-[6%] top-[12%] h-[52vh] w-[52vh] rounded-full blur-[100px] animate-aurora"
             style={{ background: 'var(--orb-violet)', animationDelay: '-7s' }}
           />
         </motion.div>
@@ -72,11 +72,11 @@ export default function SpatialBackground() {
       {/* depth layer 3 - near */}
       <motion.div style={parallax ? { x: l1x, y: l1y } : undefined} className="absolute inset-0">
         <div
-          className="absolute left-[38%] top-[4%] h-[64vh] w-[64vh] -translate-x-1/2 rounded-full blur-[110px] animate-aurora"
+          className="spatial-orb absolute left-[38%] top-[4%] h-[64vh] w-[64vh] -translate-x-1/2 rounded-full blur-[110px] animate-aurora"
           style={{ background: 'var(--orb-blue)' }}
         />
         <div
-          className="absolute bottom-[-12%] left-[52%] h-[42vh] w-[42vh] rounded-full blur-[100px] animate-aurora"
+          className="spatial-orb absolute bottom-[-12%] left-[52%] h-[42vh] w-[42vh] rounded-full blur-[100px] animate-aurora"
           style={{ background: 'var(--orb-violet)', animationDelay: '-12s' }}
         />
       </motion.div>

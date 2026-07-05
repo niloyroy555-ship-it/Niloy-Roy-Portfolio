@@ -109,16 +109,16 @@ export default function Contact() {
           <form onSubmit={submit} className="rounded-[2.5rem] glass-panel p-6 md:p-8">
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Name</label>
-                <input value={form.name} onChange={update('name')} placeholder="Your name" className={inputCls} />
+                <label htmlFor="contact-name" className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Name</label>
+                <input id="contact-name" name="name" autoComplete="name" value={form.name} onChange={update('name')} placeholder="Your name" className={inputCls} />
               </div>
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Email</label>
-                <input type="email" value={form.email} onChange={update('email')} placeholder="you@email.com" className={inputCls} />
+                <label htmlFor="contact-email" className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Email</label>
+                <input id="contact-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="off" autoCorrect="off" value={form.email} onChange={update('email')} placeholder="you@email.com" className={inputCls} />
               </div>
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Message</label>
-                <textarea value={form.message} onChange={update('message')} rows={4} placeholder="Tell me about your project…" className={`${inputCls} resize-none`} />
+                <label htmlFor="contact-message" className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Message</label>
+                <textarea id="contact-message" name="message" value={form.message} onChange={update('message')} rows={4} placeholder="Tell me about your project…" className={`${inputCls} resize-none`} />
               </div>
               <button
                 type="submit"

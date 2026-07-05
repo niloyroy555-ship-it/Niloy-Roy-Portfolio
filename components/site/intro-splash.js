@@ -10,7 +10,7 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), { ssr: false })
 const SEEN_KEY = 'nr_intro_seen'
 const PLAY_AFTER_LOAD_MS = 2800 // let the distortion play, then reveal
 const HARD_CAP_MS = 7000 // never block the site longer than this
-const FALLBACK_MS = 1800 // static/gradient splash duration on low-power devices
+const FALLBACK_MS = 2000 // static splash duration on low-power devices
 
 function isLowPower() {
   if (typeof window === 'undefined') return true
@@ -21,8 +21,36 @@ function isLowPower() {
   return coarse || small || reduce || !!lowMem
 }
 
-// Full-screen splash that plays the Spline "distorting intro" once per session,
-// then morphs into the hero. Tap/click anywhere to skip.
+// HUD wallpaper: full-bleed, responsive (WebP + JPEG fallback), preloaded from layout head.
+function LoaderBackdrop() {
+  return (
+    <div className="absolute inset-0" aria-hidden>
+      <picture>
+        <source
+          type="image/webp"
+          srcSet="/loader/loader-bg-960.webp 960w, /loader/loader-bg-1900.webp 1900w"
+          sizes="100vw"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/loader/loader-bg-1900.jpg"
+          srcSet="/loader/loader-bg-960.jpg 960w, /loader/loader-bg-1900.jpg 1900w"
+          sizes="100vw"
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="h-full w-full object-cover object-center"
+        />
+      </picture>
+      {/* subtle scrim so the spinner / skip text stay readable on the bright HUD areas */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/25" />
+    </div>
+  )
+}
+
+// Full-screen splash that shows the HUD wallpaper instantly, plays the Spline
+// "distorting intro" on capable devices, then morphs into the hero.
+// Tap/click anywhere to skip. Plays once per session.
 export default function IntroSplash({ onReveal }) {
   // boot -> live | fallback -> exiting -> done
   const [phase, setPhase] = useState('boot')
@@ -86,40 +114,54 @@ export default function IntroSplash({ onReveal }) {
           exit={{ opacity: 0, scale: 1.12, filter: 'blur(24px)' }}
           transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
         >
+          {/* HUD wallpaper — visible instantly on every device */}
+          <LoaderBackdrop />
+
+          {/* live distortion scene fades in above the wallpaper once ready */}
           {phase === 'live' && (
-            <div className="absolute inset-0">
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: sceneReady ? 1 : 0 }}
+              transition={{ duration: 0.8 }}
+            >
               <Spline scene="/scenes/intro-distortion.splinecode" onLoad={onSceneLoad} style={{ width: '100%', height: '100%' }} />
-            </div>
+            </motion.div>
           )}
 
+          {/* name on the static splash */}
           {phase === 'fallback' && (
-            <div className="intro-distort absolute inset-0">
-              <div className="flex h-full w-full items-center justify-center">
-                <motion.p
-                  initial={{ opacity: 0, letterSpacing: '0.6em', filter: 'blur(10px)' }}
-                  animate={{ opacity: 1, letterSpacing: '0.25em', filter: 'blur(0px)' }}
-                  transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-sm font-light uppercase text-white/85"
-                >
-                  {profile.name}
-                </motion.p>
-              </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.p
+                initial={{ opacity: 0, letterSpacing: '0.6em', filter: 'blur(10px)' }}
+                animate={{ opacity: 1, letterSpacing: '0.25em', filter: 'blur(0px)' }}
+                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+                className="text-sm font-light uppercase text-white [text-shadow:0_1px_12px_rgba(0,0,0,0.7)]"
+              >
+                {profile.name}
+              </motion.p>
             </div>
           )}
 
-          {/* loading shimmer while the live scene initialises */}
-          {phase === 'live' && !sceneReady && (
+          {/* loading spinner while the live scene initialises */}
+          {(phase === 'boot' || (phase === 'live' && !sceneReady)) && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
-              <span className="h-10 w-10 animate-spin-slow rounded-full border border-white/15 border-t-white/70" style={{ animationDuration: '1.2s' }} />
+              <span className="grid place-items-center rounded-full bg-black/35 p-3 backdrop-blur-md">
+                <span
+                  className="h-9 w-9 animate-spin-slow rounded-full border-2 border-white/25 border-t-white/95"
+                  style={{ animationDuration: '1.2s' }}
+                />
+              </span>
             </div>
           )}
 
-          {/* skip hint */}
+          {/* skip hint — respects the iOS home-indicator safe area */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.1, duration: 0.8 }}
-            className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 text-[11px] uppercase tracking-[0.3em] text-white/45"
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/40 px-4 py-2 text-[11px] uppercase tracking-[0.3em] text-white/90 backdrop-blur-md"
+            style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
           >
             Tap anywhere to skip
           </motion.p>

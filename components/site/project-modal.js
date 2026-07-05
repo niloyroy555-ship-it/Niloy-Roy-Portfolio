@@ -1,13 +1,21 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import RevealMedia from './reveal-media'
 
 const ease = [0.22, 1, 0.36, 1]
 
-function GalleryItem({ src, i }) {
+function useCoarsePointer() {
+  const [coarse, setCoarse] = useState(false)
+  useEffect(() => {
+    setCoarse(window.matchMedia('(pointer: coarse)').matches)
+  }, [])
+  return coarse
+}
+
+function GalleryItem({ src, i, coarse }) {
   const isVideo = src.endsWith('.mp4')
   const poster = isVideo ? src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg') : undefined
   return (
@@ -19,7 +27,7 @@ function GalleryItem({ src, i }) {
           poster={poster}
           delay={(i % 2) * 0.08}
           className="h-full w-full object-cover"
-          videoProps={{ controls: true, muted: true, loop: true, playsInline: true, preload: 'metadata' }}
+          videoProps={{ controls: true, muted: true, loop: true, playsInline: true, preload: coarse ? 'none' : 'metadata' }}
         />
       ) : (
         <RevealMedia
@@ -48,6 +56,7 @@ function Meta({ label, items }) {
 }
 
 export default function ProjectModal({ project, onClose }) {
+  const coarse = useCoarsePointer()
   useEffect(() => {
     if (project) {
       document.body.style.overflow = 'hidden'
@@ -110,7 +119,7 @@ export default function ProjectModal({ project, onClose }) {
                   src={project.cover}
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
                   className="h-full w-full object-cover"
-                  videoProps={{ autoPlay: true, muted: true, loop: true, playsInline: true }}
+                  videoProps={{ autoPlay: !coarse, muted: true, loop: true, playsInline: true, controls: coarse, preload: coarse ? 'none' : 'metadata' }}
                 />
               ) : (
                 <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" />
@@ -154,7 +163,7 @@ export default function ProjectModal({ project, onClose }) {
                 <p className="mb-6 text-xs uppercase tracking-[0.25em] text-fg/40">Gallery</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {project.gallery.map((src, i) => (
-                    <GalleryItem key={src + i} src={src} i={i} />
+                    <GalleryItem key={src + i} src={src} i={i} coarse={coarse} />
                   ))}
                 </div>
               </div>

@@ -19,14 +19,14 @@ function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
-  if (!mounted) return <span className="grid h-9 w-9 place-items-center rounded-full glass-chip" />
+  if (!mounted) return <span className="grid h-11 w-11 place-items-center rounded-full glass-chip md:h-9 md:w-9" />
   const dark = resolvedTheme === 'dark'
   return (
     <button
       onClick={() => setTheme(dark ? 'light' : 'dark')}
       data-cursor="link"
       aria-label="Toggle theme"
-      className="grid h-9 w-9 place-items-center rounded-full glass-chip text-fg/80 transition-colors hover:text-fg"
+      className="grid h-11 w-11 place-items-center rounded-full glass-chip text-fg/80 transition-colors hover:text-fg md:h-9 md:w-9"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
@@ -59,7 +59,7 @@ export default function Nav() {
       transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
       className="fixed inset-x-0 top-0 z-50"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 pt-4 md:px-6 md:pt-5">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 md:px-6" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
         <div className="flex w-full items-center justify-between rounded-full glass-panel px-4 py-2.5 md:px-5" style={{ borderRadius: 999 }}>
           <button onClick={() => go('#top')} data-cursor="link" className="group flex items-center gap-2.5">
             <span className="block h-8 w-8 overflow-hidden rounded-full ring-1 ring-fg/20 transition-transform duration-700 group-hover:rotate-[360deg]">
@@ -96,7 +96,7 @@ export default function Nav() {
                 </button>
               </Magnetic>
             </div>
-            <button onClick={() => setOpen((v) => !v)} className="grid h-9 w-9 place-items-center rounded-full text-fg md:hidden" aria-label="Menu">
+            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg md:hidden" aria-label="Menu">
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>

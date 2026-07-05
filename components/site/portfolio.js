@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { projects } from '@/lib/portfolio-data'
@@ -11,10 +11,25 @@ function posterFor(src) {
   return src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')
 }
 
+// true on touch devices — used to avoid autoplaying heavy videos on mobile data
+function useCoarsePointer() {
+  const [coarse, setCoarse] = useState(false)
+  useEffect(() => {
+    setCoarse(window.matchMedia('(pointer: coarse)').matches)
+  }, [])
+  return coarse
+}
+
 function Media({ project, className }) {
+  const coarse = useCoarsePointer()
   const style = { objectPosition: project.coverPosition || 'center' }
 
   if (project.type === 'video') {
+    // Mobile: show the lightweight poster instead of autoplaying the mp4.
+    // Tapping the card opens the case study where the video can be played.
+    if (coarse) {
+      return <RevealMedia type="image" src={posterFor(project.cover)} alt={project.title} className={className} style={style} />
+    }
     return (
       <RevealMedia
         type="video"

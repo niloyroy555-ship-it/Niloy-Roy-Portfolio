@@ -186,7 +186,8 @@ export default function Hero({ ready = true }) {
         initial={{ opacity: 0 }}
         animate={ready ? { opacity: 1 } : {}}
         transition={{ delay: 1.4 }}
-        className="absolute bottom-7 left-1/2 z-10 -translate-x-1/2 text-fg/40"
+        className="absolute left-1/2 z-10 -translate-x-1/2 p-3 text-fg/40"
+        style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
         aria-label="Scroll"
       >
         <motion.span animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }} className="block">
