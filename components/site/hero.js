@@ -40,12 +40,32 @@ export default function Hero() {
       
       <div className="hero-grid" />
 
-      {/* ambient gradients */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
-        <div className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[55px] animate-aurora md:blur-[110px]" style={{ animationDelay: '-6s' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
-      </div>
+      {/* Background Grid + Ambient Gradients */}
+<div className="pointer-events-none absolute inset-0">
+
+  {/* Grid */}
+  <div
+    className="absolute inset-0 opacity-100"
+    style={{
+      backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
+      `,
+      backgroundSize: "80px 80px",
+    }}
+  />
+
+  {/* Glow */}
+  <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[60px] animate-aurora md:blur-[120px]" />
+
+  <div
+    className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[55px] animate-aurora md:blur-[110px]"
+    style={{ animationDelay: "-6s" }}
+  />
+
+  <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
+
+</div>
 
       <ParticleField className="absolute inset-0 h-full w-full" />
 
