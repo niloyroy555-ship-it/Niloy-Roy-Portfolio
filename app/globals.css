@@ -160,7 +160,11 @@
   }
 }
 
-/* Compact screens keep the animated experience, with lighter blur for comfort */
+/* Compact screens keep the animated experience, with lighter blur for comfort.
+   `.is-coarse` mirrors every rule below for touch/stylus devices regardless
+   of viewport width — a tablet in landscape can easily report >1023px while
+   still running a mobile-class GPU, so width alone isn't a safe proxy for
+   "can this device afford full blur". */
 @media (max-width: 1023px) {
   .glass, .glass-panel, .glass-card, .glass-chip {
     backdrop-filter: blur(8px) saturate(140%);
@@ -170,11 +174,8 @@
   .spatial-orb {
     filter: blur(36px) !important;
     opacity: 0.85;
+    animation: none !important;
   }
-  /* the orbs drift via CSS animation for the entire session even when
-     scrolled far away — on phones we keep them as a static glow instead,
-     removing a continuous compositor cost for essentially no visible loss
-     (it was a slow, subtle drift to begin with) */
   /* the nav bar is `position: fixed`, so unlike every other glass surface
      it's on-screen and re-compositing its backdrop blur on every single
      scroll frame for the entire session — give it the lightest possible
@@ -195,6 +196,29 @@
   .cursor-none-desktop * {
     cursor: auto !important;
   }
+}
+
+.is-coarse .glass, .is-coarse .glass-panel, .is-coarse .glass-card, .is-coarse .glass-chip {
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+.is-coarse .spatial-orb {
+  filter: blur(36px) !important;
+  opacity: 0.85;
+  animation: none !important;
+}
+.is-coarse header .glass-panel {
+  background: linear-gradient(135deg, rgba(18, 18, 30, 0.82), rgba(14, 14, 24, 0.78));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.is-coarse.light header .glass-panel,
+.light .is-coarse header .glass-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
+}
+.is-coarse .cursor-none-desktop,
+.is-coarse .cursor-none-desktop * {
+  cursor: auto !important;
 }
 
 /* iOS: inputs must be >=16px or Safari zooms the page on focus */

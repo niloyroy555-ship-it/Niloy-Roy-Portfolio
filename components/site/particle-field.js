@@ -19,16 +19,24 @@ export default function ParticleField({ className = '' }) {
     const ctx = canvas.getContext('2d')
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    // Touch/stylus devices (phones AND tablets) get the reduced particle
+    // count. This used to be a `width < 640` check, which only caught
+    // phones — a tablet in landscape (or many tablets even in portrait)
+    // reports a width well above that, so it was silently getting the full
+    // 110-particle desktop count with an O(n^2) link-distance pass between
+    // every pair, every frame, on a mobile-class GPU.
+    const coarsePointer = window.matchMedia('(pointer: coarse)').matches
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
 
     let width = 0
     let height = 0
     let particles = []
     let raf = 0
+    let paused = false
+    let visible = true
 
     function makeParticles() {
-      const isSmall = width < 640
-      const count = isSmall ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP
+      const count = coarsePointer ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -50,6 +58,10 @@ export default function ParticleField({ className = '' }) {
     }
 
     function step() {
+      if (paused || !visible) {
+        raf = 0 // loop has stopped; lets the observer/visibilitychange handlers know they need to kick it off again
+        return
+      }
       ctx.clearRect(0, 0, width, height)
 
       for (const p of particles) {
@@ -91,13 +103,35 @@ export default function ParticleField({ className = '' }) {
       if (!reduceMotion) raf = requestAnimationFrame(step)
     }
 
+    // Pause entirely when the canvas is scrolled out of view — no reason to
+    // keep computing ~6,000 pairwise distance checks a frame for a hero
+    // background the user has already scrolled past.
+    const io = new IntersectionObserver(
+      (entries) => {
+        visible = entries[0]?.isIntersecting ?? true
+        if (visible && !paused && !raf) {
+          raf = requestAnimationFrame(step)
+        }
+      },
+      { threshold: 0 }
+    )
+    io.observe(canvas)
+
+    const onVisibilityChange = () => {
+      paused = document.visibilityState !== 'visible'
+      if (!paused && visible && !raf) raf = requestAnimationFrame(step)
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
     resize()
     window.addEventListener('resize', resize)
-    step()
+    raf = requestAnimationFrame(step)
 
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      io.disconnect()
     }
   }, [])
 
