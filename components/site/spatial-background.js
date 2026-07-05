@@ -49,11 +49,16 @@ export default function SpatialBackground() {
         }}
       />
 
+<<<<<<< HEAD
       {/* depth layer 1 - far. Hidden on phones: it's the least visually
           distinct of the four orbs, and every blurred layer removed there
           is one less full-screen blur pass the GPU has to composite on
           every scroll frame. */}
       <motion.div style={parallax ? { x: l3x, y: l3y } : undefined} className="absolute inset-0 hidden md:block">
+=======
+      {/* depth layer 1 - far */}
+      <motion.div style={parallax ? { x: l3x, y: l3y } : undefined} className="absolute inset-0">
+>>>>>>> e4e5c0790b84505e04ce215325278357d3e46051
         <motion.div style={{ y: scroll2 }} className="absolute inset-0">
           <div
             className="spatial-orb absolute left-[8%] top-[55%] h-[46vh] w-[46vh] rounded-full blur-[90px]"
@@ -84,11 +89,17 @@ export default function SpatialBackground() {
         />
       </motion.div>
 
+<<<<<<< HEAD
       {/* fine noise for texture — desktop only, mix-blend-overlay over the
           full viewport is another compositing pass that's not worth it on
           phones for a barely-perceptible amount of grain */}
       <div
         className="absolute inset-0 hidden opacity-[0.05] mix-blend-overlay md:block"
+=======
+      {/* fine noise for texture */}
+      <div
+        className="absolute inset-0 opacity-[0.05] mix-blend-overlay"
+>>>>>>> e4e5c0790b84505e04ce215325278357d3e46051
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",

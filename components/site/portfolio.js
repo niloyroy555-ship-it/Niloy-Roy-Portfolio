@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { projects } from '@/lib/portfolio-data'
@@ -10,6 +10,15 @@ import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 function posterFor(src) {
   return src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')
+}
+
+// true on touch devices — used to avoid autoplaying heavy videos on mobile data
+function useCoarsePointer() {
+  const [coarse, setCoarse] = useState(false)
+  useEffect(() => {
+    setCoarse(window.matchMedia('(pointer: coarse)').matches)
+  }, [])
+  return coarse
 }
 
 function Media({ project, className }) {
@@ -74,7 +83,11 @@ function ProjectCard({ project, index, onOpen }) {
           onClick={() => onOpen(project)}
           data-cursor="open"
           data-cursor-label="View"
+<<<<<<< HEAD
           style={coarse ? undefined : { rotateX: srx, rotateY: sry, transformStyle: 'preserve-3d' }}
+=======
+          style={{ rotateX: srx, rotateY: sry, transformStyle: 'preserve-3d' }}
+>>>>>>> e4e5c0790b84505e04ce215325278357d3e46051
           className="group relative block w-full overflow-hidden rounded-[2rem] glass-card text-left transition-shadow duration-500 hover:shadow-[0_30px_70px_rgba(109,141,255,0.18)]"
         >
           <div className="relative m-2.5 overflow-hidden rounded-[1.5rem]">
