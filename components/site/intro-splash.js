@@ -1,22 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import { profile } from '@/lib/portfolio-data'
 
-const Spline = dynamic(() => import('@splinetool/react-spline'), { ssr: false })
-
 const SEEN_KEY = 'nr_intro_seen'
-const PLAY_AFTER_LOAD_MS = 2800 // let the distortion play, then reveal
-const HARD_CAP_MS = 7000 // never block the site longer than this
-const FALLBACK_MS = 2000 // static splash duration on low-power devices
-
-function isLowPower() {
-  if (typeof window === 'undefined') return true
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  return reduce
-}
+const FALLBACK_MS = 2000 // static splash duration
 
 // HUD wallpaper: full-bleed, responsive (WebP + JPEG fallback), preloaded from layout head.
 function LoaderBackdrop() {
@@ -45,13 +34,11 @@ function LoaderBackdrop() {
   )
 }
 
-// Full-screen splash that shows the HUD wallpaper instantly, plays the Spline
-// "distorting intro" on capable devices, then morphs into the hero.
-// Tap/click anywhere to skip. Plays once per session.
+// Full-screen splash that shows the HUD wallpaper instantly, then morphs
+// into the hero. Tap/click anywhere to skip. Plays once per session.
 export default function IntroSplash({ onReveal }) {
-  // boot -> live | fallback -> exiting -> done
+  // boot -> fallback -> exiting -> done
   const [phase, setPhase] = useState('boot')
-  const [sceneReady, setSceneReady] = useState(false)
   const finished = useRef(false)
   const timers = useRef([])
   const revealRef = useRef(onReveal)
@@ -76,24 +63,14 @@ export default function IntroSplash({ onReveal }) {
       return
     }
 
-    if (isLowPower()) {
-      setPhase('fallback')
-      timers.current.push(setTimeout(finish, FALLBACK_MS))
-    } else {
-      setPhase('live')
-      timers.current.push(setTimeout(finish, HARD_CAP_MS))
-    }
+    setPhase('fallback')
+    timers.current.push(setTimeout(finish, FALLBACK_MS))
     return () => timers.current.forEach(clearTimeout)
-  }, [finish])
-
-  const onSceneLoad = useCallback(() => {
-    setSceneReady(true)
-    timers.current.push(setTimeout(finish, PLAY_AFTER_LOAD_MS))
   }, [finish])
 
   if (phase === 'done') return null
 
-  const showing = phase === 'boot' || phase === 'live' || phase === 'fallback'
+  const showing = phase === 'boot' || phase === 'fallback'
 
   return (
     <AnimatePresence onExitComplete={() => setPhase('done')}>
@@ -111,18 +88,6 @@ export default function IntroSplash({ onReveal }) {
           {/* HUD wallpaper — visible instantly on every device */}
           <LoaderBackdrop />
 
-          {/* live distortion scene fades in above the wallpaper once ready */}
-          {phase === 'live' && (
-            <motion.div
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: sceneReady ? 1 : 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Spline scene="/scenes/intro-distortion.splinecode" onLoad={onSceneLoad} style={{ width: '100%', height: '100%' }} />
-            </motion.div>
-          )}
-
           {/* name on the static splash */}
           {phase === 'fallback' && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -137,8 +102,8 @@ export default function IntroSplash({ onReveal }) {
             </div>
           )}
 
-          {/* loading spinner while the live scene initialises */}
-          {(phase === 'boot' || (phase === 'live' && !sceneReady)) && (
+          {/* loading spinner during initial boot */}
+          {phase === 'boot' && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <span className="grid place-items-center rounded-full bg-black/35 p-3 backdrop-blur-md">
                 <span
