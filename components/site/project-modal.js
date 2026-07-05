@@ -1,18 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import RevealMedia from './reveal-media'
 import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 const ease = [0.22, 1, 0.36, 1]
+const GALLERY_BATCH = 16 // galleries can run to 130+ items — mount in batches
 
 function GalleryItem({ src, i, coarse }) {
   const isVideo = src.endsWith('.mp4')
   const poster = isVideo ? src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg') : undefined
   return (
-    <div className="overflow-hidden rounded-3xl glass-chip">
+    <div className="gallery-item overflow-hidden rounded-3xl glass-chip">
       {isVideo ? (
         <RevealMedia
           type="video"
@@ -50,6 +51,12 @@ function Meta({ label, items }) {
 
 export default function ProjectModal({ project, onClose }) {
   const coarse = useCoarsePointer()
+  const [visibleCount, setVisibleCount] = useState(GALLERY_BATCH)
+
+  useEffect(() => {
+    setVisibleCount(GALLERY_BATCH)
+  }, [project])
+
   useEffect(() => {
     if (project) {
       document.body.style.overflow = 'hidden'
@@ -66,6 +73,23 @@ export default function ProjectModal({ project, onClose }) {
 
   const heroIsVideo = project && project.type === 'video'
   const heroStyle = { objectPosition: project?.modalCoverPosition || project?.coverPosition || 'center' }
+
+  // The scale-up entrance looks great on desktop, but on Android animating
+  // `scale` on a container that has an actively-decoding <video> inside it
+  // triggers a well-known hardware-video-surface bug: the decoder briefly
+  // drops a solid white frame mid-transform. A plain fade+rise (no scale)
+  // sidesteps it entirely and is what touch devices get instead.
+  const panelMotion = coarse
+    ? {
+        initial: { opacity: 0, y: 16 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: 16 },
+      }
+    : {
+        initial: { scale: 0.95, opacity: 0, y: 20 },
+        animate: { scale: 1, opacity: 1, y: 0 },
+        exit: { scale: 0.95, opacity: 0, y: 20 },
+      }
 
   return (
     <AnimatePresence mode="wait">
@@ -89,9 +113,9 @@ export default function ProjectModal({ project, onClose }) {
             transition={{ duration: 0.35 }}
           />
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            initial={panelMotion.initial}
+            animate={panelMotion.animate}
+            exit={panelMotion.exit}
             transition={{ duration: 0.4, ease }}
             className="relative mx-auto my-6 w-[94%] max-w-5xl overflow-hidden rounded-[2rem] glass-panel lg:my-12 lg:rounded-[2.5rem]"
             style={{ willChange: 'transform, opacity' }}
@@ -114,7 +138,8 @@ export default function ProjectModal({ project, onClose }) {
                   poster={project.cover.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg')}
                   className="h-full w-full object-cover"
                   style={heroStyle}
-                  videoProps={{ autoPlay: !coarse, muted: true, loop: true, playsInline: true, controls: coarse, preload: coarse ? 'none' : 'metadata' }}
+                  alwaysPlay={project.alwaysPlay}
+                  videoProps={{ autoPlay: true, muted: true, loop: true, playsInline: true, controls: coarse, preload: 'metadata' }}
                 />
               ) : (
                 <RevealMedia type="image" src={project.cover} alt={project.title} className="h-full w-full object-cover" style={heroStyle} />
@@ -157,10 +182,18 @@ export default function ProjectModal({ project, onClose }) {
               <div>
                 <p className="mb-6 text-xs uppercase tracking-[0.25em] text-fg/40">Gallery</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {project.gallery.map((src, i) => (
+                  {project.gallery.slice(0, visibleCount).map((src, i) => (
                     <GalleryItem key={src + i} src={src} i={i} coarse={coarse} />
                   ))}
                 </div>
+                {visibleCount < project.gallery.length && (
+                  <button
+                    onClick={() => setVisibleCount((c) => c + GALLERY_BATCH)}
+                    className="mx-auto mt-8 block rounded-full glass-chip px-6 py-3 text-sm font-medium text-fg/80 transition-colors hover:text-fg"
+                  >
+                    Load more ({project.gallery.length - visibleCount} remaining)
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
