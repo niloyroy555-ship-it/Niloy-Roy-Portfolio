@@ -162,7 +162,6 @@
 
 /* Mobile: lighter blur so glass never janks */
 @media (max-width: 768px) {
-<<<<<<< HEAD
   .glass, .glass-panel, .glass-card, .glass-chip {
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
@@ -194,17 +193,6 @@
   .light header .glass-panel {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
   }
-=======
-  .glass, .glass-panel, .glass-card {
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
-  }
-  /* cap the huge ambient-orb blurs on phones (GPU-heavy) */
-  .spatial-orb {
-    filter: blur(48px) !important;
-    opacity: 0.85;
-  }
->>>>>>> e4e5c0790b84505e04ce215325278357d3e46051
 }
 
 /* iOS: inputs must be >=16px or Safari zooms the page on focus */

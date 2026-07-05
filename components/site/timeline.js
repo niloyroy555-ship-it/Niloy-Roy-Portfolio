@@ -50,11 +50,7 @@ export default function Timeline() {
                   whileInView={coarse ? undefined : { opacity: 1, x: 0, y: 0 }}
                   viewport={{ once: true, margin: '-80px' }}
                   transition={{ duration: 0.75, ease }}
-<<<<<<< HEAD
                   whileHover={coarse ? undefined : { y: -4 }}
-=======
-                  whileHover={{ y: -4 }}
->>>>>>> e4e5c0790b84505e04ce215325278357d3e46051
                   className={`rounded-[1.75rem] glass-card p-6 md:my-4 ${right ? 'md:col-start-2' : 'md:col-start-1 md:text-right'}`}
                 >
                   <span className="text-xs font-medium text-brand">{job.period}</span>

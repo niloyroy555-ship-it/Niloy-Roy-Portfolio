@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import RevealMedia from './reveal-media'
@@ -8,17 +8,6 @@ import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 const ease = [0.22, 1, 0.36, 1]
 
-<<<<<<< HEAD
-=======
-function useCoarsePointer() {
-  const [coarse, setCoarse] = useState(false)
-  useEffect(() => {
-    setCoarse(window.matchMedia('(pointer: coarse)').matches)
-  }, [])
-  return coarse
-}
-
->>>>>>> e4e5c0790b84505e04ce215325278357d3e46051
 function GalleryItem({ src, i, coarse }) {
   const isVideo = src.endsWith('.mp4')
   const poster = isVideo ? src.replace('/motion/', '/motion/posters/').replace('.mp4', '.jpg') : undefined
