@@ -41,15 +41,15 @@ export default function Contact() {
   const inputCls = 'w-full rounded-2xl glass-chip px-4 py-3.5 text-fg outline-none transition-all placeholder:text-fg/35 focus:ring-2 focus:ring-brand/60'
 
   return (
-    <section id="contact" className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-24 md:px-8 md:py-32">
-      <div className="grid gap-14 md:grid-cols-[1fr_1fr] md:gap-20">
+    <section id="contact" className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-24 md:px-8 lg:py-32">
+      <div className="grid gap-14 lg:grid-cols-[1fr_1fr] lg:gap-20">
         <div>
           <Reveal>
             <span className="mb-4 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-brand">
               Contact
             </span>
           </Reveal>
-          <h2 className="text-4xl font-semibold leading-[1.05] tracking-tight text-fg md:text-6xl">
+          <h2 className="text-4xl font-semibold leading-[1.05] tracking-tight text-fg lg:text-6xl">
             <TextReveal text="Let's create" />
             <br />
             <TextReveal text="something" wordClass="text-gradient" delay={0.1} />{' '}
@@ -106,7 +106,7 @@ export default function Contact() {
 
         {/* Form */}
         <Reveal delay={0.15}>
-          <form onSubmit={submit} className="rounded-[2.5rem] glass-panel p-6 md:p-8">
+          <form onSubmit={submit} className="rounded-[2.5rem] glass-panel p-6 lg:p-8">
             <div className="space-y-5">
               <div>
                 <label htmlFor="contact-name" className="mb-2 block text-xs uppercase tracking-[0.2em] text-fg/45">Name</label>

@@ -19,14 +19,14 @@ function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
-  if (!mounted) return <span className="grid h-11 w-11 place-items-center rounded-full glass-chip md:h-9 md:w-9" />
+  if (!mounted) return <span className="grid h-11 w-11 place-items-center rounded-full glass-chip lg:h-9 lg:w-9" />
   const dark = resolvedTheme === 'dark'
   return (
     <button
       onClick={() => setTheme(dark ? 'light' : 'dark')}
       data-cursor="link"
       aria-label="Toggle theme"
-      className="grid h-11 w-11 place-items-center rounded-full glass-chip text-fg/80 transition-colors hover:text-fg md:h-9 md:w-9"
+      className="grid h-11 w-11 place-items-center rounded-full glass-chip text-fg/80 transition-colors hover:text-fg lg:h-9 lg:w-9"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
@@ -59,8 +59,8 @@ export default function Nav() {
       transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
       className="fixed inset-x-0 top-0 z-50"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 md:px-6" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
-        <div className="flex w-full items-center justify-between rounded-full glass-panel px-4 py-2.5 md:px-5" style={{ borderRadius: 999 }}>
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 lg:px-6" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
+        <div className="flex w-full items-center justify-between rounded-full glass-panel px-4 py-2.5 lg:px-5" style={{ borderRadius: 999 }}>
           <button onClick={() => go('#top')} data-cursor="link" className="group flex items-center gap-2.5">
             <span className="block h-8 w-8 overflow-hidden rounded-full ring-1 ring-fg/20 transition-transform duration-700 group-hover:rotate-[360deg]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -69,7 +69,7 @@ export default function Nav() {
             <span className="text-sm font-medium tracking-tight text-fg/90">Niloy Roy</span>
           </button>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {links.map((l) => (
               <button
                 key={l.id}
@@ -85,7 +85,7 @@ export default function Nav() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <Magnetic strength={0.4}>
                 <button
                   onClick={() => go('#contact')}
@@ -96,7 +96,7 @@ export default function Nav() {
                 </button>
               </Magnetic>
             </div>
-            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg md:hidden" aria-label="Menu">
+            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg lg:hidden" aria-label="Menu">
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
@@ -109,7 +109,7 @@ export default function Nav() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 md:hidden"
+            className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 lg:hidden"
           >
             {links.map((l) => (
               <button key={l.id} onClick={() => go(l.id)} className="block w-full rounded-2xl px-4 py-3 text-left text-base text-fg/80 hover:bg-fg/5">

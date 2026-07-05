@@ -92,7 +92,7 @@ export default function ProjectModal({ project, onClose }) {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ duration: 0.4, ease }}
-            className="relative mx-auto my-6 w-[94%] max-w-5xl overflow-hidden rounded-[2.5rem] glass-panel md:my-12"
+            className="relative mx-auto my-6 w-[94%] max-w-5xl overflow-hidden rounded-[2rem] glass-panel lg:my-12 lg:rounded-[2.5rem]"
             style={{ willChange: 'transform, opacity' }}
           >
             <button
@@ -120,12 +120,12 @@ export default function ProjectModal({ project, onClose }) {
 
               <div className="absolute bottom-6 left-6 right-6" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.5)' }}>
                 <span className="mb-3 inline-block rounded-full glass-chip px-3 py-1 text-[11px] tracking-wide text-white/85">{project.category} · {project.year}</span>
-                <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white md:text-5xl">{project.title}</h2>
+                <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white lg:text-5xl">{project.title}</h2>
               </div>
             </div>
 
-            <div className="space-y-12 p-6 md:p-10">
-              <div className="grid gap-10 md:grid-cols-[1.4fr_1fr]">
+            <div className="space-y-12 p-6 lg:p-10">
+              <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
                 <div>
                   <p className="mb-3 text-xs uppercase tracking-[0.25em] text-brand">Overview</p>
                   <p className="text-lg font-light leading-relaxed text-fg/75">{project.overview}</p>

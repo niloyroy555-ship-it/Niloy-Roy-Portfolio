@@ -40,7 +40,8 @@ export default function Hero({ ready = true }) {
   // silently on some browsers — if the OS withholds events we simply stay static)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) return
+    const compact = window.innerWidth < 1024 || navigator.maxTouchPoints > 0
+    if (reduce || compact) return
     const onOrient = (e) => {
       if (e.gamma == null || e.beta == null) return
       // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
@@ -60,7 +61,7 @@ export default function Hero({ ready = true }) {
   const onLeave = () => { mx.set(0); my.set(0) }
 
   return (
-    <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
+    <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3">
       {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
       <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
         <motion.div
@@ -98,13 +99,13 @@ export default function Hero({ ready = true }) {
       {/* ---- floating glass panel ---- */}
       <motion.div
         style={{ rotateX: rotX, rotateY: rotY, x: panelX, y: panelY, transformPerspective: 1400 }}
-        className="relative z-10 mx-auto w-[92%] max-w-2xl px-2 py-24 text-center md:px-0"
+        className="relative z-10 mx-auto w-full max-w-2xl px-0 py-24 text-center sm:w-[92%] lg:px-0"
       >
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.96 }}
           animate={ready ? { opacity: 1, y: 0, scale: 1 } : {}}
           transition={{ duration: 1, ease, delay: 0.15 }}
-          className="glass-panel rounded-[2.5rem] px-6 py-10 md:px-14 md:py-14"
+          className="glass-panel rounded-[2rem] px-5 py-9 sm:px-6 md:rounded-[2.5rem] lg:px-14 lg:py-14"
         >
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -120,13 +121,13 @@ export default function Hero({ ready = true }) {
             initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
             animate={ready ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
             transition={{ delay: 0.35, duration: 1, ease }}
-            className="text-5xl font-semibold tracking-tight text-fg sm:text-6xl md:text-7xl"
+            className="text-4xl font-semibold tracking-tight text-fg sm:text-6xl lg:text-7xl"
           >
             {profile.firstName} <span className="text-gradient">{profile.lastName}</span>
           </motion.h1>
 
           {/* morphing role */}
-          <div className="mt-5 flex h-8 items-center justify-center overflow-hidden md:h-10">
+          <div className="mt-5 flex h-8 items-center justify-center overflow-hidden lg:h-10">
             <AnimatePresence mode="wait">
               <motion.p
                 key={roleIdx}
@@ -134,7 +135,7 @@ export default function Hero({ ready = true }) {
                 animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
                 exit={{ y: '-100%', opacity: 0, filter: 'blur(6px)' }}
                 transition={{ duration: 0.6, ease }}
-                className="text-lg font-light text-fg/75 md:text-2xl"
+                className="text-lg font-light text-fg/75 lg:text-2xl"
               >
                 {profile.roles[roleIdx]}
               </motion.p>
@@ -145,7 +146,7 @@ export default function Hero({ ready = true }) {
             initial={{ opacity: 0, y: 16 }}
             animate={ready ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.75, duration: 0.9 }}
-            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 md:text-base"
+            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 lg:text-base"
           >
             {profile.tagline}
           </motion.p>

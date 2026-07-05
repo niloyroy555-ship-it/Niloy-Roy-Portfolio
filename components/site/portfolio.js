@@ -109,25 +109,25 @@ function ProjectCard({ project, index, onOpen }) {
 
 export default function Portfolio({ onOpen }) {
   return (
-    <section id="work" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-24 md:px-8 md:py-32">
-      <div className="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+    <section id="work" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-24 md:px-8 lg:py-32">
+      <div className="mb-14 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
         <div>
           <Reveal>
             <span className="mb-4 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-brand">
               Selected Work
             </span>
           </Reveal>
-          <h2 className="text-4xl font-semibold leading-tight tracking-tight text-fg md:text-6xl">
-            <TextReveal text="Projects that" /> <br className="hidden md:block" />
+          <h2 className="text-4xl font-semibold leading-tight tracking-tight text-fg lg:text-6xl">
+            <TextReveal text="Projects that" /> <br className="hidden lg:block" />
             <TextReveal text="move people." wordClass="text-gradient" delay={0.15} />
           </h2>
         </div>
-        <Reveal delay={0.1} className="max-w-sm text-sm font-light leading-relaxed text-fg/50 md:text-right">
+        <Reveal delay={0.1} className="max-w-sm text-sm font-light leading-relaxed text-fg/50 lg:text-right">
           Brand campaigns, motion films, photo manipulation and photography — crafted across design, video and AI.
         </Reveal>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         {projects.map((p, i) => (
           <ProjectCard key={p.id} project={p} index={i} onOpen={onOpen} />
         ))}

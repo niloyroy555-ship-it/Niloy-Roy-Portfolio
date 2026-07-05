@@ -46,8 +46,8 @@ const pillGroups = [
 
 export default function About() {
   return (
-    <section id="about" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-24 md:px-8 md:py-32">
-      <div className="grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
+    <section id="about" className="relative mx-auto max-w-7xl scroll-mt-24 px-5 py-24 md:px-8 lg:py-32">
+      <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
         {/* Floating portrait */}
         <Reveal>
           <motion.div
@@ -67,7 +67,7 @@ export default function About() {
                 <span className="absolute bottom-5 left-5 rounded-full glass-chip px-3 py-1 text-xs text-white/85">Niloy Roy · {profile.location}</span>
               </div>
             </div>
-            <div className="absolute -bottom-5 -right-5 hidden rounded-3xl glass-panel px-5 py-4 md:block">
+            <div className="absolute -bottom-5 -right-5 hidden rounded-3xl glass-panel px-5 py-4 lg:block">
               <p className="text-3xl font-semibold text-fg">5+</p>
               <p className="text-xs font-light text-fg/55">Years crafting visuals</p>
             </div>
@@ -80,7 +80,7 @@ export default function About() {
               About
             </span>
           </Reveal>
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight text-fg md:text-5xl">
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight text-fg lg:text-5xl">
             <TextReveal text="Designer, editor &" />
             <br />
             <TextReveal text="visual storyteller." wordClass="text-gradient" delay={0.12} />
@@ -96,7 +96,7 @@ export default function About() {
             {profile.stats.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.08}>
                 <div className="rounded-3xl glass-chip px-4 py-4 text-center">
-                  <p className="text-2xl font-semibold text-fg md:text-3xl">
+                  <p className="text-2xl font-semibold text-fg lg:text-3xl">
                     <Counter value={s.value} suffix={s.suffix} />
                   </p>
                   <p className="mt-1 text-[11px] font-light leading-snug text-fg/50">{s.label}</p>
@@ -110,7 +110,7 @@ export default function About() {
       {/* Skills / Tools — floating badges in a glass panel */}
       <div id="skills" className="mt-16 scroll-mt-24">
         <Reveal>
-          <div className="rounded-[2.5rem] glass-panel p-7 md:p-10">
+          <div className="rounded-[2.5rem] glass-panel p-7 lg:p-10">
             <span className="mb-6 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-brand">
               Skills &amp; Tools
             </span>

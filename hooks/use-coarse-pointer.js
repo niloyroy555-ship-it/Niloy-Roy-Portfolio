@@ -22,7 +22,7 @@ export function useCoarsePointer() {
 
   useEffect(() => {
     const mql = window.matchMedia('(pointer: coarse)')
-    const update = () => setCoarse(mql.matches || window.innerWidth < 768)
+    const update = () => setCoarse(mql.matches || window.innerWidth < 1024)
     update()
     mql.addEventListener('change', update)
     window.addEventListener('resize', update, { passive: true })

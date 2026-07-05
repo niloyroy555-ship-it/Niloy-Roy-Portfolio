@@ -160,8 +160,8 @@
   }
 }
 
-/* Mobile: lighter blur so glass never janks */
-@media (max-width: 768px) {
+/* Compact screens: lighter blur so tablets and phones never jank */
+@media (max-width: 1023px) {
   .glass, .glass-panel, .glass-card, .glass-chip {
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
@@ -192,6 +192,11 @@
   }
   .light header .glass-panel {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
+  }
+
+  .cursor-none-desktop,
+  .cursor-none-desktop * {
+    cursor: auto !important;
   }
 }
 

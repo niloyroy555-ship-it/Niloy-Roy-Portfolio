@@ -63,7 +63,7 @@ export default function CustomCursor() {
   const ringSize = isLabel ? 78 : isLink ? 54 : 32
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[100] hidden md:block" aria-hidden>
+    <div className="pointer-events-none fixed inset-0 z-[100] hidden lg:block" aria-hidden>
       <motion.div
         className="fixed left-0 top-0 flex items-center justify-center rounded-full border"
         style={{ x: ringX, y: ringY, translateX: '-50%', translateY: '-50%' }}
