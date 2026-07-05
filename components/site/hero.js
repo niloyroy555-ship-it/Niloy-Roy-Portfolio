@@ -43,11 +43,23 @@ export default function Hero({ ready = true }) {
     if (reduce) return
     let listening = false
     let active = true
+    let pending = false
+    let latest = null
     const onOrient = (e) => {
       if (e.gamma == null || e.beta == null) return
-      // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
-      mx.set(clamp(e.gamma / 60, -0.5, 0.5))
-      my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
+      latest = e
+      // Android can fire deviceorientation 30-60x/sec; batching to one
+      // update per animation frame avoids recomputing the spring chain
+      // far more often than the screen can actually repaint.
+      if (pending) return
+      pending = true
+      requestAnimationFrame(() => {
+        pending = false
+        if (!latest) return
+        // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
+        mx.set(clamp(latest.gamma / 60, -0.5, 0.5))
+        my.set(clamp((latest.beta - 45) / 60, -0.5, 0.5))
+      })
     }
     const startListening = () => {
       if (listening || !active) return
