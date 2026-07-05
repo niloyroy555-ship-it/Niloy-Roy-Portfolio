@@ -14,20 +14,26 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 export default function Hero({ ready = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
   const ref = useRef(null)
+  // Phones/tablets have no mouse — gyro tilt is their *only* way to drive
+  // this effect, so it needs a noticeably larger range than the desktop
+  // mouse-parallax version to actually read as "the background reacts to
+  // me" rather than a barely-there wobble.
+  const [coarsePointer, setCoarsePointer] = useState(false)
+  const gyroAmp = coarsePointer ? 1.9 : 1
 
   // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
 
   // glass panel: gentle 3D tilt toward the cursor / device orientation
-  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5, -5]), { stiffness: 110, damping: 20 })
-  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7, 7]), { stiffness: 110, damping: 20 })
-  const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), { stiffness: 60, damping: 20 })
-  const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 60, damping: 20 })
+  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5 * gyroAmp, -5 * gyroAmp]), { stiffness: 110, damping: 20 })
+  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7 * gyroAmp, 7 * gyroAmp]), { stiffness: 110, damping: 20 })
+  const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10 * gyroAmp, 10 * gyroAmp]), { stiffness: 60, damping: 20 })
+  const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6 * gyroAmp, 6 * gyroAmp]), { stiffness: 60, damping: 20 })
 
   // background image: counter-parallax (moves opposite the panel for depth)
-  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18, -18]), { stiffness: 50, damping: 22 })
-  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 50, damping: 22 })
+  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18 * gyroAmp, -18 * gyroAmp]), { stiffness: 50, damping: 22 })
+  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12 * gyroAmp, -12 * gyroAmp]), { stiffness: 50, damping: 22 })
   const bgRotX = useSpring(useTransform(my, [-0.5, 0.5], [-2.5, 2.5]), { stiffness: 50, damping: 22 })
   const bgRotY = useSpring(useTransform(mx, [-0.5, 0.5], [2.5, -2.5]), { stiffness: 50, damping: 22 })
 
@@ -41,6 +47,7 @@ export default function Hero({ ready = true }) {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduce) return
+    setCoarsePointer(window.matchMedia('(pointer: coarse)').matches)
     let listening = false
     let active = true
     let pending = false
@@ -56,9 +63,13 @@ export default function Hero({ ready = true }) {
       requestAnimationFrame(() => {
         pending = false
         if (!latest) return
-        // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
-        mx.set(clamp(latest.gamma / 60, -0.5, 0.5))
-        my.set(clamp((latest.beta - 45) / 60, -0.5, 0.5))
+        // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally).
+        // Divisor of 38 (was 60) means a normal, comfortable hand-tilt while
+        // reading the page reaches most of the -0.5..0.5 range — 60 required
+        // an almost-flat-to-vertical swing that people don't casually make,
+        // which is why the effect read as "not there" on a real device.
+        mx.set(clamp(latest.gamma / 38, -0.5, 0.5))
+        my.set(clamp((latest.beta - 45) / 38, -0.5, 0.5))
       })
     }
     const startListening = () => {
