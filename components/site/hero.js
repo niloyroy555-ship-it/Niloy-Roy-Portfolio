@@ -69,10 +69,10 @@ export default function Hero() {
 
       <ParticleField className="absolute inset-0 h-full w-full" />
 
-      <motion.div
-        style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
-        className="relative z-10 mx-auto max-w-5xl px-6 text-center"
-      >
+     <motion.div
+  style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
+  className="relative z-10 mx-auto w-full max-w-7xl px-6 text-center"
+>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,23 +83,21 @@ export default function Hero() {
           Available for freelance & full-time · {profile.location}
         </motion.div>
 
-        <h1 className="font-graffiti text-[25vw] sm:text-[22vw] md:text-[18rem] lg:text-[20rem] leading-[0.9] tracking-normal text-white">
-          <span className="sr-only">{profile.name}</span>
-          <span aria-hidden className="flex flex-wrap items-center justify-center">
-            {letters.map((ch, i) => (
-              <motion.span
-                key={i}
-                initial={{ y: '120%', opacity: 0, rotateX: -70 }}
-                animate={{ y: '0%', opacity: 1, rotateX: 0 }}
-                transition={{ delay: 0.35 + i * 0.05, duration: 0.9, ease }}
-                className="inline-block"
-                style={{ transformOrigin: 'bottom' }}
-              >
-                {ch === ' ' ? '\u00A0' : ch}
-              </motion.span>
-            ))}
-          </span>
-        </h1>
+        <h1
+  className="
+    font-graffiti
+    whitespace-nowrap
+    text-[22vw]
+    sm:text-[18vw]
+    md:text-[11rem]
+    lg:text-[13rem]
+    xl:text-[15rem]
+    leading-[0.82]
+    tracking-[-0.05em]
+    text-white
+    select-none
+  "
+>
 
         {/* morphing role */}
         <div className="mt-6 flex h-9 items-center justify-center overflow-hidden md:h-11">
