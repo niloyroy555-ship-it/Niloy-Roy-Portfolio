@@ -3,10 +3,6 @@
 import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 
-// Desktop-only custom cursor (ring + dot that follow the pointer and react
-// to [data-cursor] targets). Automatically inert on touch devices: there is
-// no persistent pointer to track, and rendering nothing there means no
-// extra springs/listeners on the devices that need to stay lightest.
 export default function CustomCursor() {
   const [enabled, setEnabled] = useState(false)
   const [variant, setVariant] = useState('default')
@@ -21,7 +17,6 @@ export default function CustomCursor() {
   const dotY = useSpring(y, { stiffness: 1200, damping: 50 })
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
     const fine = window.matchMedia('(pointer: fine)').matches
     if (!fine) return
     setEnabled(true)
@@ -63,15 +58,15 @@ export default function CustomCursor() {
   const ringSize = isLabel ? 78 : isLink ? 54 : 32
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[100] hidden lg:block" aria-hidden>
+    <div className="pointer-events-none fixed inset-0 z-[100] hidden md:block" aria-hidden>
       <motion.div
         className="fixed left-0 top-0 flex items-center justify-center rounded-full border"
         style={{ x: ringX, y: ringY, translateX: '-50%', translateY: '-50%' }}
         animate={{
           width: ringSize,
           height: ringSize,
-          backgroundColor: isLabel ? 'rgba(109,141,255,0.96)' : 'rgba(109,141,255,0)',
-          borderColor: isLabel ? 'rgba(109,141,255,0)' : 'rgba(140,150,190,0.6)',
+          backgroundColor: isLabel ? 'rgba(91,140,255,0.96)' : 'rgba(91,140,255,0)',
+          borderColor: isLabel ? 'rgba(91,140,255,0)' : 'rgba(255,255,255,0.5)',
           scale: down ? 0.8 : 1,
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}

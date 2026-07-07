@@ -8,10 +8,6 @@ module.exports = {
       './src/**/*.{js,jsx}',
     ],
     prefix: "",
-    future: {
-      // avoids sticky :hover states on iOS / touch devices
-      hoverOnlyWhenSupported: true,
-    },
     theme: {
       container: {
         center: true,
@@ -22,33 +18,24 @@ module.exports = {
       },
       extend: {
         fontFamily: {
-          sans: ['var(--font-inter)', '-apple-system', 'SF Pro Display', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-          display: ['var(--font-inter)', '-apple-system', 'SF Pro Display', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          display: ['var(--font-grotesk)', 'var(--font-inter)', 'sans-serif'],
           graffiti: ['var(--font-graffiti)', 'var(--font-grotesk)', 'cursive'],
         },
         colors: {
           brand: {
-            DEFAULT: '#6D8DFF',
-            50: '#F0F4FF',
-            100: '#E0E9FF',
-            200: '#C2D2FF',
-            300: '#9DB6FF',
-            400: '#82A0FF',
-            500: '#6D8DFF',
-            600: '#4E6DF0',
-            700: '#3B52D0',
-            800: '#3242A4',
-            900: '#2B3880',
+            DEFAULT: '#5B8CFF',
+            50: '#EEF3FF',
+            100: '#DCE6FF',
+            200: '#BBCEFF',
+            300: '#93AEFF',
+            400: '#6E93FF',
+            500: '#5B8CFF',
+            600: '#3E63F5',
+            700: '#2F48D6',
+            800: '#293CAB',
+            900: '#243685',
           },
-          violet2: {
-            DEFAULT: '#A78BFA',
-            300: '#C3B5FF',
-            400: '#B39DFC',
-            500: '#A78BFA',
-            600: '#8B67F5',
-          },
-          fg: 'hsl(var(--fg) / <alpha-value>)',
-          base: 'hsl(var(--base) / <alpha-value>)',
           ink: {
             DEFAULT: '#08080A',
             50: '#F5F5F6',
@@ -92,9 +79,7 @@ module.exports = {
         borderRadius: {
           lg: 'var(--radius)',
           md: 'calc(var(--radius) - 2px)',
-          sm: 'calc(var(--radius) - 4px)',
-          '4xl': '2rem',
-          '5xl': '2.5rem',
+          sm: 'calc(var(--radius) - 4px)'
         },
         keyframes: {
           'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
@@ -105,7 +90,6 @@ module.exports = {
           aurora: { '0%,100%': { transform: 'translate(0,0) scale(1)' }, '33%': { transform: 'translate(6%,-8%) scale(1.15)' }, '66%': { transform: 'translate(-6%,6%) scale(0.9)' } },
           shimmer: { '100%': { transform: 'translateX(200%)' } },
           'spin-slow': { to: { transform: 'rotate(360deg)' } },
-          'pulse-soft': { '0%,100%': { opacity: '0.7' }, '50%': { opacity: '1' } },
         },
         animation: {
           'accordion-down': 'accordion-down 0.2s ease-out',
@@ -115,7 +99,6 @@ module.exports = {
           float: 'float 7s ease-in-out infinite',
           aurora: 'aurora 18s ease-in-out infinite',
           'spin-slow': 'spin-slow 22s linear infinite',
-          'pulse-soft': 'pulse-soft 2.4s ease-in-out infinite',
         }
       }
     },
