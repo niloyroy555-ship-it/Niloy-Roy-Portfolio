@@ -2,75 +2,110 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight, ArrowDown } from 'lucide-react'
-import ParticleField from './particle-field'
-import HeroVideo from './hero-video'
+import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import Magnetic from './magnetic'
 import { profile } from '@/lib/portfolio-data'
 import { scrollToId } from './smooth-scroll'
-import { isTouchDevice } from '@/utils/isTouch'
 
 const ease = [0.22, 1, 0.36, 1]
-const letters = profile.name.split('')
 
-export default function Hero({ videoActive = true }) {
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
+
+export default function Hero({ ready = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
+  const [reducedMotion, setReducedMotion] = useState(false)
   const ref = useRef(null)
+  const videoRef = useRef(null)
 
-  // subtle 3D bend toward cursor (desktop) or device tilt (mobile/gyro)
+  // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
-  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [6, -6]), { stiffness: 120, damping: 20 })
-  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-8, 8]), { stiffness: 120, damping: 20 })
+
+  // glass panel: gentle 3D tilt toward the cursor / device orientation
+  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5, -5]), { stiffness: 110, damping: 20 })
+  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7, 7]), { stiffness: 110, damping: 20 })
+  const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), { stiffness: 60, damping: 20 })
+  const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 60, damping: 20 })
+
+  // background image: counter-parallax (moves opposite the panel for depth)
+  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18, -18]), { stiffness: 50, damping: 22 })
+  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 50, damping: 22 })
+  const bgRotX = useSpring(useTransform(my, [-0.5, 0.5], [-2.5, 2.5]), { stiffness: 50, damping: 22 })
+  const bgRotY = useSpring(useTransform(mx, [-0.5, 0.5], [2.5, -2.5]), { stiffness: 50, damping: 22 })
 
   useEffect(() => {
     const id = setInterval(() => setRoleIdx((i) => (i + 1) % profile.roles.length), 2400)
     return () => clearInterval(id)
   }, [])
 
-  // Gyro tilt: on phones/tablets there's no cursor, so device orientation
-  // drives the same rotX/rotY the mouse would. Values are calibrated
-  // relative to the first reading so it feels centered wherever the
-  // phone was being held, not relative to "flat on a table".
+  // honour prefers-reduced-motion: fall back to the static poster frame
+  // instead of the looping background video
   useEffect(() => {
-    if (!isTouchDevice() || typeof window === 'undefined' || !window.DeviceOrientationEvent) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReducedMotion(mq.matches)
+    const onChange = (e) => setReducedMotion(e.matches)
+    mq.addEventListener?.('change', onChange)
+    return () => mq.removeEventListener?.('change', onChange)
+  }, [])
 
-    let calibrated = false
-    let baseBeta = 0
-    let baseGamma = 0
+  // only decode/play the background video while the hero is actually on
+  // screen — saves CPU/battery once the person scrolls past it
+  useEffect(() => {
+    const video = videoRef.current
+    const section = ref.current
+    if (!video || !section || reducedMotion) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) video.play?.().catch(() => {})
+        else video.pause?.()
+      },
+      { threshold: 0.1 }
+    )
+    io.observe(section)
+    return () => io.disconnect()
+  }, [reducedMotion])
 
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
-
-    const onOrientation = (e) => {
-      if (e.beta == null || e.gamma == null) return
-      if (!calibrated) {
-        baseBeta = e.beta
-        baseGamma = e.gamma
-        calibrated = true
-      }
-      const dBeta = clamp((e.beta - baseBeta) / 45, -0.5, 0.5) // front/back tilt
-      const dGamma = clamp((e.gamma - baseGamma) / 45, -0.5, 0.5) // left/right tilt
-      my.set(dBeta)
-      mx.set(dGamma)
+  // gyroscope tilt on devices that expose orientation (Android; iOS grants it
+  // silently on some browsers — if the OS withholds events we simply stay static)
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) return
+    let listening = false
+    let active = true
+    const onOrient = (e) => {
+      if (e.gamma == null || e.beta == null) return
+      // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
+      mx.set(clamp(e.gamma / 60, -0.5, 0.5))
+      my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
+    }
+    const startListening = () => {
+      if (listening || !active) return
+      window.addEventListener('deviceorientation', onOrient, { passive: true })
+      listening = true
     }
 
-    const attach = () => window.addEventListener('deviceorientation', onOrientation, true)
-
-    // iOS 13+ requires an explicit permission grant from a user gesture.
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
-      const requestOnGesture = () => {
-        DeviceOrientationEvent.requestPermission().then((state) => {
-          if (state === 'granted') attach()
-        }).catch(() => {})
-        window.removeEventListener('touchend', requestOnGesture)
+    const unlockOrientation = async () => {
+      const Orientation = window.DeviceOrientationEvent
+      if (Orientation && typeof Orientation.requestPermission === 'function') {
+        try {
+          const result = await Orientation.requestPermission()
+          if (result === 'granted') startListening()
+        } catch (e) {
+          // If permission is denied or unavailable, pointer parallax still works.
+        }
+      } else {
+        startListening()
       }
-      window.addEventListener('touchend', requestOnGesture, { once: true })
-      return () => window.removeEventListener('touchend', requestOnGesture)
     }
 
-    attach()
-    return () => window.removeEventListener('deviceorientation', onOrientation, true)
+    unlockOrientation()
+    window.addEventListener('pointerdown', unlockOrientation, { passive: true, once: true })
+
+    return () => {
+      active = false
+      window.removeEventListener('pointerdown', unlockOrientation)
+      if (listening) window.removeEventListener('deviceorientation', onOrient)
+    }
   }, [mx, my])
 
   const onMove = (e) => {
@@ -82,104 +117,155 @@ export default function Hero({ videoActive = true }) {
   const onLeave = () => { mx.set(0); my.set(0) }
 
   return (
-    <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
-      {/* ambient gradients */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[38%] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/20 blur-[120px] animate-aurora" />
-        <div className="absolute right-[12%] top-[18%] h-[34vh] w-[34vh] rounded-full bg-indigo-500/10 blur-[110px] animate-aurora" style={{ animationDelay: '-6s' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
-      </div>
-
-      {/* teased cyber-arm loop; starts once the loading screen hands off */}
-      <HeroVideo active={videoActive} />
-
-      <ParticleField className="absolute inset-0 h-full w-full" />
-
-      <motion.div
-        style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 1200 }}
-        className="relative z-10 mx-auto max-w-5xl px-6 text-center"
-      >
+    <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3">
+      {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
+      <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs text-white/70"
+          className="absolute inset-0"
+          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: 1.08, transformStyle: 'preserve-3d' }}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-          Available for freelance & full-time · {profile.location}
+          {reducedMotion ? (
+            // static fallback for people who've asked for reduced motion
+            <picture>
+              <source
+                type="image/webp"
+                srcSet="/hero/cyber-arm-poster-960.webp 960w, /hero/cyber-arm-poster-1900.webp 1900w"
+                sizes="100vw"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/hero/cyber-arm-poster-1900.jpg"
+                srcSet="/hero/cyber-arm-poster-960.jpg 960w, /hero/cyber-arm-poster-1900.jpg 1900w"
+                sizes="100vw"
+                alt=""
+                fetchPriority="high"
+                decoding="async"
+                className="h-full w-full object-cover object-center"
+              />
+            </picture>
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              loop
+              playsInline
+              disablePictureInPicture
+              preload="auto"
+              poster="/hero/cyber-arm-poster-1900.jpg"
+              aria-hidden="true"
+              className="h-full w-full object-cover object-center"
+            >
+              {/* smaller encode for phones/tablets */}
+              <source media="(max-width: 768px)" src="/hero/cyber-arm-hero-720.webm" type="video/webm" />
+              <source media="(max-width: 768px)" src="/hero/cyber-arm-hero-720.mp4" type="video/mp4" />
+              {/* full-size encode for everyone else */}
+              <source src="/hero/cyber-arm-hero-1080.webm" type="video/webm" />
+              <source src="/hero/cyber-arm-hero-1080.mp4" type="video/mp4" />
+            </video>
+          )}
         </motion.div>
 
-        <div className="glass-ultrathin -mx-4 rounded-[2.5rem] px-4 py-2 sm:-mx-6 sm:px-6">
-          <h1 className="font-graffiti text-[26vw] sm:text-[22vw] md:text-[18rem] lg:text-[20rem] leading-[0.9] tracking-normal text-white">
-            <span className="sr-only">{profile.name}</span>
-            <span aria-hidden className="flex flex-wrap items-center justify-center">
-              {letters.map((ch, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ y: '120%', opacity: 0, rotateX: -70 }}
-                  animate={{ y: '0%', opacity: 1, rotateX: 0 }}
-                  transition={{ delay: 0.35 + i * 0.05, duration: 0.9, ease }}
-                  className="inline-block"
-                  style={{ transformOrigin: 'bottom' }}
-                >
-                  {ch === ' ' ? '\u00A0' : ch}
-                </motion.span>
-              ))}
-            </span>
-          </h1>
-        </div>
+        {/* dark gradient scrim for text readability over the bright HUD areas */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_50%,rgba(0,0,0,0.28),transparent_75%)]" />
 
-        {/* morphing role */}
-        <div className="mt-6 flex h-9 items-center justify-center overflow-hidden md:h-11">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={roleIdx}
-              initial={{ y: '100%', opacity: 0, filter: 'blur(6px)' }}
-              animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
-              exit={{ y: '-100%', opacity: 0, filter: 'blur(6px)' }}
-              transition={{ duration: 0.6, ease }}
-              className="bg-gradient-to-r from-white via-white to-brand-200 bg-clip-text text-xl font-medium text-transparent md:text-3xl"
-            >
-              {profile.roles[roleIdx]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
+        {/* blend edges into the page background */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-base to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-base/60 to-transparent" />
+      </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.9 }}
-          className="mx-auto mt-6 max-w-xl text-balance text-sm leading-relaxed text-white/55 md:text-base"
-        >
-          {profile.tagline}
-        </motion.p>
-
+      {/* ---- floating glass panel ---- */}
+      <motion.div
+        style={{ rotateX: rotX, rotateY: rotY, x: panelX, y: panelY, transformPerspective: 1400 }}
+        className="relative z-10 mx-auto w-full max-w-2xl px-0 py-24 text-center sm:w-[92%] lg:px-0"
+      >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 0.9 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-4"
+          initial={{ opacity: 0, y: 30, scale: 0.96 }}
+          animate={ready ? { opacity: 1, y: 0, scale: 1 } : {}}
+          transition={{ duration: 1, ease, delay: 0.15 }}
+          className="hero-glass rounded-[2rem] px-5 py-9 sm:px-6 md:rounded-[2.5rem] lg:px-14 lg:py-14"
         >
-          <Magnetic strength={0.5}>
-            <button onClick={() => scrollToId('#work')} data-cursor="link" className="group flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-950 transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.25)]">
-              View Portfolio
-              <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </button>
-          </Magnetic>
-          <Magnetic strength={0.5}>
-            <button onClick={() => scrollToId('#contact')} data-cursor="link" className="rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/5">
-              Contact Me
-            </button>
-          </Magnetic>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.45, duration: 0.8 }}
+            className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full glass-chip px-4 py-1.5 text-xs text-fg/70"
+          >
+            <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-emerald-400" />
+            Available for freelance &amp; full-time · {profile.location}
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
+            animate={ready ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+            transition={{ delay: 0.35, duration: 1, ease }}
+            className="text-4xl font-semibold tracking-tight text-fg sm:text-6xl lg:text-7xl"
+          >
+            {profile.firstName} <span className="text-gradient">{profile.lastName}</span>
+          </motion.h1>
+
+          {/* morphing role */}
+          <div className="mt-5 flex h-8 items-center justify-center overflow-hidden lg:h-10">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={roleIdx}
+                initial={{ y: '100%', opacity: 0, filter: 'blur(6px)' }}
+                animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
+                exit={{ y: '-100%', opacity: 0, filter: 'blur(6px)' }}
+                transition={{ duration: 0.6, ease }}
+                className="text-lg font-light text-fg/75 lg:text-2xl"
+              >
+                {profile.roles[roleIdx]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.75, duration: 0.9 }}
+            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 lg:text-base"
+          >
+            {profile.tagline}
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.9, duration: 0.9 }}
+            className="mt-9 flex flex-wrap items-center justify-center gap-4"
+          >
+            <Magnetic strength={0.5}>
+              <button
+                onClick={() => scrollToId('#work')}
+                data-cursor="link"
+                className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-violet2-500 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_rgba(109,141,255,0.35)] transition-all hover:shadow-[0_14px_54px_rgba(109,141,255,0.5)]"
+              >
+                View My Work
+                <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </button>
+            </Magnetic>
+            <Magnetic strength={0.5}>
+              <button
+                onClick={() => scrollToId('#contact')}
+                data-cursor="link"
+                className="rounded-full glass-chip px-7 py-3.5 text-sm font-semibold text-fg transition-colors hover:bg-fg/5"
+              >
+                Contact Me
+              </button>
+            </Magnetic>
+          </motion.div>
         </motion.div>
       </motion.div>
 
       <motion.button
         onClick={() => scrollToId('#work')}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={ready ? { opacity: 1 } : {}}
         transition={{ delay: 1.4 }}
-        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-white/40"
+        className="absolute left-1/2 z-10 -translate-x-1/2 p-3 text-white/60"
+        style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
         aria-label="Scroll"
       >
         <motion.span animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }} className="block">

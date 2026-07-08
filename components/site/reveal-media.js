@@ -1,12 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 const ease = [0.22, 1, 0.36, 1]
-const curtainEase = [0.85, 0, 0.15, 1]
 
-// Cinematic media reveal: scale + blur-out with a curtain wipe, on enter-view + load.
+// Cinematic media reveal: opacity fade-in on enter-view + load, on desktop.
+//
+// On touch devices the fade is skipped entirely and media just renders
+// normally — no motion.div wrapper, no loaded-state gate. This matters most
+// for the case-study galleries, where dozens of images/videos can mount at
+// once; removing the per-item animated state there is a meaningful chunk of
+// avoidable JS work on a phone opening that modal.
 export default function RevealMedia({
   src,
   type = 'image',
@@ -16,14 +22,17 @@ export default function RevealMedia({
   wrapperClassName = 'h-full w-full',
   videoProps = {},
   delay = 0,
+  priority = false,
+  style,
 }) {
+  const coarse = useCoarsePointer()
   const ref = useRef(null)
   const mediaRef = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-8%' })
   const [loaded, setLoaded] = useState(false)
-  const show = inView && loaded
+  const show = loaded
 
   useEffect(() => {
+    if (coarse) return // mobile renders immediately, no load-gating needed
     // Handle already-cached/complete media that won't fire load events.
     const el = mediaRef.current
     if (el) {
@@ -31,17 +40,40 @@ export default function RevealMedia({
       if (type === 'video' && el.readyState >= 2) setLoaded(true)
     }
     // Safety net: never leave media hidden behind the curtain.
-    const t = setTimeout(() => setLoaded(true), 1200)
+    const t = setTimeout(() => setLoaded(true), 800)
     return () => clearTimeout(t)
-  }, [type, src])
+  }, [type, src, coarse])
+
+  if (coarse) {
+    return (
+      <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
+        {type === 'video' ? (
+          <video ref={mediaRef} src={src} poster={poster} className={className} style={style} {...videoProps} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            ref={mediaRef}
+            src={src}
+            alt={alt}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            decoding="async"
+            className={className}
+            style={style}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div ref={ref} className={`relative overflow-hidden ${wrapperClassName}`}>
       <motion.div
         className="h-full w-full"
-        initial={{ scale: 1.14, opacity: 0, filter: 'blur(16px)' }}
-        animate={show ? { scale: 1, opacity: 1, filter: 'blur(0px)' } : {}}
-        transition={{ duration: 1.15, ease, delay }}
+        initial={{ opacity: 0 }}
+        animate={show ? { opacity: 1 } : {}}
+        transition={{ duration: 0.25, ease, delay }}
+        style={{ willChange: 'transform, opacity' }}
       >
         {type === 'video' ? (
           <video
@@ -51,6 +83,7 @@ export default function RevealMedia({
             onLoadedData={() => setLoaded(true)}
             onError={() => setLoaded(true)}
             className={className}
+            style={style}
             {...videoProps}
           />
         ) : (
@@ -59,24 +92,16 @@ export default function RevealMedia({
             ref={mediaRef}
             src={src}
             alt={alt}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
             decoding="async"
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(true)}
             className={className}
+            style={style}
           />
         )}
       </motion.div>
-
-      {/* curtain wipe */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-ink-950"
-        style={{ transformOrigin: 'bottom' }}
-        initial={{ scaleY: 1 }}
-        animate={show ? { scaleY: 0 } : {}}
-        transition={{ duration: 0.95, ease: curtainEase, delay: delay + 0.05 }}
-      />
     </div>
   )
 }
