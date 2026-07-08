@@ -26,6 +26,19 @@ export default function Hero({ ready = true }) {
   const [coarsePointer, setCoarsePointer] = useState(false)
   const gyroAmp = coarsePointer ? 1.9 : 1
 
+  // Portrait phones/tablets are much taller than the video's 16:9 frame —
+  // object-cover would zoom in and crop most of the width away. Below the
+  // desktop breakpoint, in portrait, we switch to object-contain so the
+  // whole shot stays visible (letterboxed) instead of getting cropped.
+  const [fitContain, setFitContain] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1024px) and (orientation: portrait)')
+    const update = () => setFitContain(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
   // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
@@ -111,6 +124,17 @@ export default function Hero({ ready = true }) {
     }
   }, [mx, my])
 
+  // Native `loop` tears the decoder down and restarts it, which shows as a
+  // single black frame at the seam on most browsers. Seeking back a beat
+  // before the clip actually ends keeps the same continuous playback
+  // session running, so there's nothing to flash.
+  const handleTimeUpdate = () => {
+    const v = videoRef.current
+    if (!v || !v.duration) return
+    if (v.currentTime >= v.duration - 0.12) {
+      v.currentTime = 0
+    }
+  }
   const onMove = (e) => {
     const rect = ref.current?.getBoundingClientRect()
     if (!rect) return
@@ -122,21 +146,21 @@ export default function Hero({ ready = true }) {
   return (
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3">
       {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
-      <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
+      <div className={`absolute inset-0 [perspective:1200px] ${fitContain ? 'bg-base' : ''}`} aria-hidden>
         <motion.div
           className="absolute inset-0"
-          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: 1.08, transformStyle: 'preserve-3d' }}
+          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: fitContain ? 1 : 1.08, transformStyle: 'preserve-3d' }}
         >
           <video
             ref={videoRef}
-            className="h-full w-full object-cover object-center"
+            className={`h-full w-full object-center ${fitContain ? 'object-contain' : 'object-cover'}`}
             poster="/hero/hero-poster.jpg"
             autoPlay={!reduceMotion}
-            loop
             muted
             playsInline
             preload="auto"
             disablePictureInPicture
+            onTimeUpdate={handleTimeUpdate}
             aria-hidden="true"
           >
             {/* Phones get the lighter 720p renditions first; anything wider
@@ -154,7 +178,11 @@ export default function Hero({ ready = true }) {
 
         {/* dark gradient scrim for text readability over the bright HUD areas */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/30" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_50%,rgba(0,0,0,0.28),transparent_75%)]" />
+        {/* tease, don't reveal: with the name panel's blur turned way down so the
+            video reads clearly, this center-weighted scrim is what keeps the shot
+            from fully uncovering itself behind the text — edges stay crisp and
+            visible, the core stays a little withheld. */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(58%_52%_at_50%_50%,rgba(0,0,0,0.4),transparent_78%)]" />
 
         {/* blend edges into the page background */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-base to-transparent" />
@@ -211,7 +239,7 @@ export default function Hero({ ready = true }) {
             initial={{ opacity: 0, y: 16 }}
             animate={ready ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.75, duration: 0.9 }}
-            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 lg:text-base"
+            className="mx-auto mt-5 max-w-lg text-balance text-sm font-light leading-relaxed text-fg/70 lg:text-white/80 lg:text-base"
           >
             {profile.tagline}
           </motion.p>
@@ -223,14 +251,16 @@ export default function Hero({ ready = true }) {
             className="mt-9 flex flex-wrap items-center justify-center gap-4"
           >
             <Magnetic strength={0.5}>
-              <button
-                onClick={() => scrollToId('#work')}
+              <a
+                href={profile.socials.find((s) => s.label === 'Behance')?.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 data-cursor="link"
                 className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-violet2-500 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_rgba(109,141,255,0.35)] transition-all hover:shadow-[0_14px_54px_rgba(109,141,255,0.5)]"
               >
                 View My Work
                 <ArrowUpRight size={17} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </button>
+              </a>
             </Magnetic>
             <Magnetic strength={0.5}>
               <button
