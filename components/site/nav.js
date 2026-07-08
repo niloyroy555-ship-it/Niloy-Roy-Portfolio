@@ -6,6 +6,7 @@ import { Menu, X, Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import Magnetic from './magnetic'
 import { scrollToId } from './smooth-scroll'
+import { useActiveSection } from '@/hooks/use-active-section'
 
 const links = [
   { label: 'Work', id: '#work' },
@@ -14,6 +15,10 @@ const links = [
   { label: 'Experience', id: '#experience' },
   { label: 'Contact', id: '#contact' },
 ]
+// Stable reference — useActiveSection's effect depends on this array, and a
+// fresh `links.map(...)` on every render would tear down/rebuild the
+// IntersectionObserver on every re-render instead of once on mount.
+const linkIds = links.map((l) => l.id)
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -46,6 +51,7 @@ function ThemeToggle() {
 
 export default function Nav() {
   const [open, setOpen] = useState(false)
+  const active = useActiveSection(linkIds)
 
   const go = (id) => {
     setOpen(false)
@@ -69,18 +75,23 @@ export default function Nav() {
             <span className="text-sm font-medium tracking-tight text-fg/90">Niloy Roy</span>
           </button>
 
-          <nav className="hidden items-center gap-1 lg:flex">
-            {links.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => go(l.id)}
-                data-cursor="link"
-                className="group relative rounded-full px-4 py-2 text-sm text-fg/60 transition-colors hover:text-fg"
-              >
-                {l.label}
-                <span className="absolute inset-x-4 -bottom-0.5 h-px origin-left scale-x-0 bg-gradient-to-r from-brand to-violet2 transition-transform duration-300 group-hover:scale-x-100" />
-              </button>
-            ))}
+          <nav className="hidden items-center gap-0.5 md:flex md:gap-1">
+            {links.map((l) => {
+              const isActive = l.id === active
+              return (
+                <button
+                  key={l.id}
+                  onClick={() => go(l.id)}
+                  data-cursor="link"
+                  className={`group relative rounded-full px-3 py-2 text-sm transition-colors lg:px-4 ${isActive ? 'text-fg' : 'text-fg/60 hover:text-fg'}`}
+                >
+                  {l.label}
+                  <span
+                    className={`absolute inset-x-4 -bottom-0.5 h-px origin-left bg-gradient-to-r from-brand to-violet2 transition-transform duration-300 ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}
+                  />
+                </button>
+              )
+            })}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -96,7 +107,7 @@ export default function Nav() {
                 </button>
               </Magnetic>
             </div>
-            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg lg:hidden" aria-label="Menu">
+            <button onClick={() => setOpen((v) => !v)} className="grid h-11 w-11 place-items-center rounded-full text-fg md:hidden" aria-label="Menu">
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
@@ -109,13 +120,21 @@ export default function Nav() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 lg:hidden"
+            className="mx-4 mt-2 overflow-hidden rounded-3xl glass-panel p-2 md:hidden"
           >
-            {links.map((l) => (
-              <button key={l.id} onClick={() => go(l.id)} className="block w-full rounded-2xl px-4 py-3 text-left text-base text-fg/80 hover:bg-fg/5">
-                {l.label}
-              </button>
-            ))}
+            {links.map((l) => {
+              const isActive = l.id === active
+              return (
+                <button
+                  key={l.id}
+                  onClick={() => go(l.id)}
+                  className={`flex w-full items-center gap-2.5 rounded-2xl px-4 py-3 text-left text-base transition-colors ${isActive ? 'bg-fg/5 font-medium text-fg' : 'text-fg/80 hover:bg-fg/5'}`}
+                >
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-brand to-violet2 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  {l.label}
+                </button>
+              )
+            })}
             <button onClick={() => go('#contact')} className="mt-1 block w-full rounded-2xl bg-gradient-to-r from-brand-500 to-violet2-500 px-4 py-3 text-left text-base font-medium text-white">Let's talk</button>
           </motion.div>
         )}

@@ -2,7 +2,6 @@ import './globals.css'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import localFont from 'next/font/local'
 import { Providers } from './providers'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', display: 'swap', weight: ['400', '500', '600', '700'] })
@@ -57,19 +56,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${grotesk.variable} ${graffiti.variable}`}>
       <head>
-        {/* Preload the loader wallpaper so the splash paints instantly (WebP; JPEG fallback is only fetched by legacy browsers) */}
+        {/* Preload the hero video's poster frame so the splash paints instantly;
+            the video itself streams in right after via its own preload="auto". */}
         <link
           rel="preload"
           as="image"
-          imageSrcSet="/loader/loader-bg-960.webp 960w, /loader/loader-bg-1900.webp 1900w"
-          imageSizes="100vw"
+          href="/hero/hero-poster.jpg"
           fetchPriority="high"
         />
         <script dangerouslySetInnerHTML={{__html:'window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);'}} />
       </head>
       <body>
         <Providers>{children}</Providers>
-        <SpeedInsights />
       </body>
     </html>
   )

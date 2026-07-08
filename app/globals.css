@@ -127,6 +127,20 @@
     border: 1px solid var(--glass-border);
     box-shadow: inset 0 1px 0 var(--glass-inner);
   }
+  /* Hero name panel only: much lighter blur than the standard .glass-panel
+     so the looping background video reads clearly through the glass instead
+     of being smeared into mush — this is a deliberate "tease, don't reveal"
+     treatment, not a perf-driven reduction like the mobile overrides below. */
+  .hero-glass-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(6px) saturate(150%);
+    -webkit-backdrop-filter: blur(6px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inner), inset 0 0 32px rgba(160, 180, 255, 0.045);
+  }
+  .light .hero-glass-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16));
+  }
 
   .text-gradient {
     background: linear-gradient(115deg, #9db6ff 0%, #c3b5ff 45%, #eef1ff 100%);
@@ -160,21 +174,26 @@
   }
 }
 
-/* Compact screens keep the animated experience, with lighter blur for comfort */
+/* Compact screens keep the animated experience, with lighter blur for comfort.
+   `.is-coarse` mirrors every rule below for touch/stylus devices regardless
+   of viewport width — a tablet in landscape can easily report >1023px while
+   still running a mobile-class GPU, so width alone isn't a safe proxy for
+   "can this device afford full blur". */
 @media (max-width: 1023px) {
   .glass, .glass-panel, .glass-card, .glass-chip {
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
   }
+  .hero-glass-panel {
+    backdrop-filter: blur(4px) saturate(140%);
+    -webkit-backdrop-filter: blur(4px) saturate(140%);
+  }
   /* cap the huge ambient-orb blurs on phones (GPU-heavy) */
   .spatial-orb {
     filter: blur(36px) !important;
     opacity: 0.85;
+    animation: none !important;
   }
-  /* the orbs drift via CSS animation for the entire session even when
-     scrolled far away — on phones we keep them as a static glow instead,
-     removing a continuous compositor cost for essentially no visible loss
-     (it was a slow, subtle drift to begin with) */
   /* the nav bar is `position: fixed`, so unlike every other glass surface
      it's on-screen and re-compositing its backdrop blur on every single
      scroll frame for the entire session — give it the lightest possible
@@ -195,6 +214,33 @@
   .cursor-none-desktop * {
     cursor: auto !important;
   }
+}
+
+.is-coarse .glass, .is-coarse .glass-panel, .is-coarse .glass-card, .is-coarse .glass-chip {
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+.is-coarse .hero-glass-panel {
+  backdrop-filter: blur(4px) saturate(140%);
+  -webkit-backdrop-filter: blur(4px) saturate(140%);
+}
+.is-coarse .spatial-orb {
+  filter: blur(36px) !important;
+  opacity: 0.85;
+  animation: none !important;
+}
+.is-coarse header .glass-panel {
+  background: linear-gradient(135deg, rgba(18, 18, 30, 0.82), rgba(14, 14, 24, 0.78));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.is-coarse.light header .glass-panel,
+.light .is-coarse header .glass-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
+}
+.is-coarse .cursor-none-desktop,
+.is-coarse .cursor-none-desktop * {
+  cursor: auto !important;
 }
 
 /* iOS: inputs must be >=16px or Safari zooms the page on focus */
