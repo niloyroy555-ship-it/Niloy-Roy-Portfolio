@@ -6,7 +6,6 @@ import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import Magnetic from './magnetic'
 import { profile } from '@/lib/portfolio-data'
 import { scrollToId } from './smooth-scroll'
-import { useCoarsePointer } from '@/hooks/use-coarse-pointer'
 
 const ease = [0.22, 1, 0.36, 1]
 
@@ -15,21 +14,31 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 export default function Hero({ ready = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
   const ref = useRef(null)
-  const coarse = useCoarsePointer()
+  const videoRef = useRef(null)
+  // Respect prefers-reduced-motion: skip autoplay/loop for the background
+  // video entirely and just leave the poster frame showing, same spirit as
+  // the gyro listener below being skipped for the same media query.
+  const [reduceMotion, setReduceMotion] = useState(false)
+  // Phones/tablets have no mouse — gyro tilt is their *only* way to drive
+  // this effect, so it needs a noticeably larger range than the desktop
+  // mouse-parallax version to actually read as "the background reacts to
+  // me" rather than a barely-there wobble.
+  const [coarsePointer, setCoarsePointer] = useState(false)
+  const gyroAmp = coarsePointer ? 1.9 : 1
 
   // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
 
   // glass panel: gentle 3D tilt toward the cursor / device orientation
-  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5, -5]), { stiffness: 110, damping: 20 })
-  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7, 7]), { stiffness: 110, damping: 20 })
-  const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10, 10]), { stiffness: 60, damping: 20 })
-  const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6, 6]), { stiffness: 60, damping: 20 })
+  const rotX = useSpring(useTransform(my, [-0.5, 0.5], [5 * gyroAmp, -5 * gyroAmp]), { stiffness: 110, damping: 20 })
+  const rotY = useSpring(useTransform(mx, [-0.5, 0.5], [-7 * gyroAmp, 7 * gyroAmp]), { stiffness: 110, damping: 20 })
+  const panelX = useSpring(useTransform(mx, [-0.5, 0.5], [-10 * gyroAmp, 10 * gyroAmp]), { stiffness: 60, damping: 20 })
+  const panelY = useSpring(useTransform(my, [-0.5, 0.5], [-6 * gyroAmp, 6 * gyroAmp]), { stiffness: 60, damping: 20 })
 
   // background image: counter-parallax (moves opposite the panel for depth)
-  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18, -18]), { stiffness: 50, damping: 22 })
-  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 50, damping: 22 })
+  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [18 * gyroAmp, -18 * gyroAmp]), { stiffness: 50, damping: 22 })
+  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [12 * gyroAmp, -12 * gyroAmp]), { stiffness: 50, damping: 22 })
   const bgRotX = useSpring(useTransform(my, [-0.5, 0.5], [-2.5, 2.5]), { stiffness: 50, damping: 22 })
   const bgRotY = useSpring(useTransform(mx, [-0.5, 0.5], [2.5, -2.5]), { stiffness: 50, damping: 22 })
 
@@ -38,22 +47,39 @@ export default function Hero({ ready = true }) {
     return () => clearInterval(id)
   }, [])
 
-  // Gyroscope tilt on devices that expose orientation. Deliberately skipped
-  // on touch devices: on a handheld phone/tablet this fires continuously
-  // from ordinary hand tremor, driving 8 spring-animated 3D transforms on a
-  // full-bleed background image nonstop — the single biggest source of the
-  // "glitchy" feeling on real hardware, and invisible in desktop testing
-  // since there's no accelerometer to trigger it there.
+  useEffect(() => {
+    setReduceMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [])
+
+  // gyroscope tilt on devices that expose orientation (Android; iOS grants it
+  // silently on some browsers — if the OS withholds events we simply stay static)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce || coarse) return
+    if (reduce) return
+    setCoarsePointer(window.matchMedia('(pointer: coarse)').matches)
     let listening = false
     let active = true
+    let pending = false
+    let latest = null
     const onOrient = (e) => {
       if (e.gamma == null || e.beta == null) return
-      // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally)
-      mx.set(clamp(e.gamma / 60, -0.5, 0.5))
-      my.set(clamp((e.beta - 45) / 60, -0.5, 0.5))
+      latest = e
+      // Android can fire deviceorientation 30-60x/sec; batching to one
+      // update per animation frame avoids recomputing the spring chain
+      // far more often than the screen can actually repaint.
+      if (pending) return
+      pending = true
+      requestAnimationFrame(() => {
+        pending = false
+        if (!latest) return
+        // gamma: left/right (-90..90), beta: front/back (-180..180, ~45 when held naturally).
+        // Divisor of 38 (was 60) means a normal, comfortable hand-tilt while
+        // reading the page reaches most of the -0.5..0.5 range — 60 required
+        // an almost-flat-to-vertical swing that people don't casually make,
+        // which is why the effect read as "not there" on a real device.
+        mx.set(clamp(latest.gamma / 38, -0.5, 0.5))
+        my.set(clamp((latest.beta - 45) / 38, -0.5, 0.5))
+      })
     }
     const startListening = () => {
       if (listening || !active) return
@@ -83,10 +109,20 @@ export default function Hero({ ready = true }) {
       window.removeEventListener('pointerdown', unlockOrientation)
       if (listening) window.removeEventListener('deviceorientation', onOrient)
     }
-  }, [mx, my, coarse])
+  }, [mx, my])
 
+  // Native `loop` tears the decoder down and restarts it, which shows as a
+  // single black frame at the seam on most browsers. Seeking back a beat
+  // before the clip actually ends keeps the same continuous playback
+  // session running, so there's nothing to flash.
+  const handleTimeUpdate = () => {
+    const v = videoRef.current
+    if (!v || !v.duration) return
+    if (v.currentTime >= v.duration - 0.12) {
+      v.currentTime = 0
+    }
+  }
   const onMove = (e) => {
-    if (coarse) return
     const rect = ref.current?.getBoundingClientRect()
     if (!rect) return
     mx.set((e.clientX - rect.left) / rect.width - 0.5)
@@ -102,23 +138,29 @@ export default function Hero({ ready = true }) {
           className="absolute inset-0"
           style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: 1.08, transformStyle: 'preserve-3d' }}
         >
-          <picture>
-            <source
-              type="image/webp"
-              srcSet="/loader/loader-bg-960.webp 960w, /loader/loader-bg-1900.webp 1900w"
-              sizes="100vw"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/loader/loader-bg-1900.jpg"
-              srcSet="/loader/loader-bg-960.jpg 960w, /loader/loader-bg-1900.jpg 1900w"
-              sizes="100vw"
-              alt=""
-              fetchPriority="high"
-              decoding="async"
-              className="h-full w-full object-cover object-center"
-            />
-          </picture>
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover object-center"
+            poster="/hero/hero-poster.jpg"
+            autoPlay={!reduceMotion}
+            muted
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+            onTimeUpdate={handleTimeUpdate}
+            aria-hidden="true"
+          >
+            {/* Phones get the lighter 720p renditions first; anything wider
+                falls through to the sharper 1080p ones. WebM/VP9 is listed
+                before MP4/H.264 in each tier since it's ~45% smaller at the
+                same quality — browsers just use the first source they can
+                decode, so this costs nothing on browsers that support it
+                and silently falls back to H.264 on the ones that don't. */}
+            <source media="(max-width: 767px)" src="/hero/cyber-arm-720.webm" type="video/webm" />
+            <source media="(max-width: 767px)" src="/hero/cyber-arm-720.mp4" type="video/mp4" />
+            <source src="/hero/cyber-arm-1080.webm" type="video/webm" />
+            <source src="/hero/cyber-arm-1080.mp4" type="video/mp4" />
+          </video>
         </motion.div>
 
         {/* dark gradient scrim for text readability over the bright HUD areas */}
@@ -139,7 +181,7 @@ export default function Hero({ ready = true }) {
           initial={{ opacity: 0, y: 30, scale: 0.96 }}
           animate={ready ? { opacity: 1, y: 0, scale: 1 } : {}}
           transition={{ duration: 1, ease, delay: 0.15 }}
-          className="glass-panel rounded-[2rem] px-5 py-9 sm:px-6 md:rounded-[2.5rem] md:px-9 md:py-11 lg:px-14 lg:py-14"
+          className="hero-glass-panel rounded-[2rem] px-5 py-9 sm:px-6 md:rounded-[2.5rem] md:px-9 md:py-11 lg:px-14 lg:py-14"
         >
           <motion.div
             initial={{ opacity: 0, y: 10 }}
