@@ -4,18 +4,20 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { ArrowUpRight, ArrowDown } from 'lucide-react'
 import ParticleField from './particle-field'
+import HeroVideo from './hero-video'
 import Magnetic from './magnetic'
 import { profile } from '@/lib/portfolio-data'
 import { scrollToId } from './smooth-scroll'
+import { isTouchDevice } from '@/utils/isTouch'
 
 const ease = [0.22, 1, 0.36, 1]
 const letters = profile.name.split('')
 
-export default function Hero() {
+export default function Hero({ videoActive = true }) {
   const [roleIdx, setRoleIdx] = useState(0)
   const ref = useRef(null)
 
-  // subtle 3D bend toward cursor
+  // subtle 3D bend toward cursor (desktop) or device tilt (mobile/gyro)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
   const rotX = useSpring(useTransform(my, [-0.5, 0.5], [6, -6]), { stiffness: 120, damping: 20 })
@@ -25,6 +27,51 @@ export default function Hero() {
     const id = setInterval(() => setRoleIdx((i) => (i + 1) % profile.roles.length), 2400)
     return () => clearInterval(id)
   }, [])
+
+  // Gyro tilt: on phones/tablets there's no cursor, so device orientation
+  // drives the same rotX/rotY the mouse would. Values are calibrated
+  // relative to the first reading so it feels centered wherever the
+  // phone was being held, not relative to "flat on a table".
+  useEffect(() => {
+    if (!isTouchDevice() || typeof window === 'undefined' || !window.DeviceOrientationEvent) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    let calibrated = false
+    let baseBeta = 0
+    let baseGamma = 0
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+    const onOrientation = (e) => {
+      if (e.beta == null || e.gamma == null) return
+      if (!calibrated) {
+        baseBeta = e.beta
+        baseGamma = e.gamma
+        calibrated = true
+      }
+      const dBeta = clamp((e.beta - baseBeta) / 45, -0.5, 0.5) // front/back tilt
+      const dGamma = clamp((e.gamma - baseGamma) / 45, -0.5, 0.5) // left/right tilt
+      my.set(dBeta)
+      mx.set(dGamma)
+    }
+
+    const attach = () => window.addEventListener('deviceorientation', onOrientation, true)
+
+    // iOS 13+ requires an explicit permission grant from a user gesture.
+    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+      const requestOnGesture = () => {
+        DeviceOrientationEvent.requestPermission().then((state) => {
+          if (state === 'granted') attach()
+        }).catch(() => {})
+        window.removeEventListener('touchend', requestOnGesture)
+      }
+      window.addEventListener('touchend', requestOnGesture, { once: true })
+      return () => window.removeEventListener('touchend', requestOnGesture)
+    }
+
+    attach()
+    return () => window.removeEventListener('deviceorientation', onOrientation, true)
+  }, [mx, my])
 
   const onMove = (e) => {
     const rect = ref.current?.getBoundingClientRect()
@@ -43,6 +90,9 @@ export default function Hero() {
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-ink-950 to-transparent" />
       </div>
 
+      {/* teased cyber-arm loop; starts once the loading screen hands off */}
+      <HeroVideo active={videoActive} />
+
       <ParticleField className="absolute inset-0 h-full w-full" />
 
       <motion.div
@@ -59,23 +109,25 @@ export default function Hero() {
           Available for freelance & full-time · {profile.location}
         </motion.div>
 
-        <h1 className="font-graffiti text-[26vw] sm:text-[22vw] md:text-[18rem] lg:text-[20rem] leading-[0.9] tracking-normal text-white">
-          <span className="sr-only">{profile.name}</span>
-          <span aria-hidden className="flex flex-wrap items-center justify-center">
-            {letters.map((ch, i) => (
-              <motion.span
-                key={i}
-                initial={{ y: '120%', opacity: 0, rotateX: -70 }}
-                animate={{ y: '0%', opacity: 1, rotateX: 0 }}
-                transition={{ delay: 0.35 + i * 0.05, duration: 0.9, ease }}
-                className="inline-block"
-                style={{ transformOrigin: 'bottom' }}
-              >
-                {ch === ' ' ? '\u00A0' : ch}
-              </motion.span>
-            ))}
-          </span>
-        </h1>
+        <div className="glass-ultrathin -mx-4 rounded-[2.5rem] px-4 py-2 sm:-mx-6 sm:px-6">
+          <h1 className="font-graffiti text-[26vw] sm:text-[22vw] md:text-[18rem] lg:text-[20rem] leading-[0.9] tracking-normal text-white">
+            <span className="sr-only">{profile.name}</span>
+            <span aria-hidden className="flex flex-wrap items-center justify-center">
+              {letters.map((ch, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ y: '120%', opacity: 0, rotateX: -70 }}
+                  animate={{ y: '0%', opacity: 1, rotateX: 0 }}
+                  transition={{ delay: 0.35 + i * 0.05, duration: 0.9, ease }}
+                  className="inline-block"
+                  style={{ transformOrigin: 'bottom' }}
+                >
+                  {ch === ' ' ? '\u00A0' : ch}
+                </motion.span>
+              ))}
+            </span>
+          </h1>
+        </div>
 
         {/* morphing role */}
         <div className="mt-6 flex h-9 items-center justify-center overflow-hidden md:h-11">
