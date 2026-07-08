@@ -124,10 +124,14 @@ export default function Hero({ ready = true }) {
     }
   }, [mx, my])
 
-  // Native `loop` tears the decoder down and restarts it, which shows as a
-  // single black frame at the seam on most browsers. Seeking back a beat
-  // before the clip actually ends keeps the same continuous playback
-  // session running, so there's nothing to flash.
+  // Seeking back a beat before the clip actually ends (instead of relying only
+  // on native `loop`) avoids the single black frame most browsers flash when
+  // `loop` tears the decoder down and restarts it — but `timeupdate` doesn't
+  // fire on every frame, so this can occasionally miss its window and let the
+  // clip hit its real end. `loop` stays on as a fallback for that case: on the
+  // (common) frames where the seek lands in time, `ended` never fires and
+  // `loop` never engages, so it costs nothing and just guarantees the video
+  // never gets stuck on its last frame.
   const handleTimeUpdate = () => {
     const v = videoRef.current
     if (!v || !v.duration) return
@@ -149,7 +153,14 @@ export default function Hero({ ready = true }) {
       <div className={`absolute inset-0 [perspective:1200px] ${fitContain ? 'bg-base' : ''}`} aria-hidden>
         <motion.div
           className="absolute inset-0"
-          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, transformStyle: 'preserve-3d' }}
+          style={{
+            x: bgX,
+            y: bgY,
+            rotateX: bgRotX,
+            rotateY: bgRotY,
+            scale: 1.08,
+            transformStyle: 'preserve-3d',
+          }}
         >
           <video
             ref={videoRef}
@@ -157,6 +168,7 @@ export default function Hero({ ready = true }) {
             poster="/hero/hero-poster.jpg"
             autoPlay={!reduceMotion}
             muted
+            loop
             playsInline
             preload="auto"
             disablePictureInPicture
