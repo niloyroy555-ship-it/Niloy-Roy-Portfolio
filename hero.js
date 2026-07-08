@@ -165,7 +165,11 @@ export default function Hero({ ready = true }) {
 
         {/* dark gradient scrim for text readability over the bright HUD areas */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/30" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_50%,rgba(0,0,0,0.28),transparent_75%)]" />
+        {/* tease, don't reveal: with the name panel's blur turned way down so the
+            video reads clearly, this center-weighted scrim is what keeps the shot
+            from fully uncovering itself behind the text — edges stay crisp and
+            visible, the core stays a little withheld. */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(58%_52%_at_50%_50%,rgba(0,0,0,0.4),transparent_78%)]" />
 
         {/* blend edges into the page background */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-base to-transparent" />

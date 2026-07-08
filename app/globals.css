@@ -132,14 +132,14 @@
      of being smeared into mush — this is a deliberate "tease, don't reveal"
      treatment, not a perf-driven reduction like the mobile overrides below. */
   .hero-glass-panel {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
-    backdrop-filter: blur(6px) saturate(150%);
-    -webkit-backdrop-filter: blur(6px) saturate(150%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
+    backdrop-filter: blur(3px) saturate(140%);
+    -webkit-backdrop-filter: blur(3px) saturate(140%);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inner), inset 0 0 32px rgba(160, 180, 255, 0.045);
   }
   .light .hero-glass-panel {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.1));
   }
 
   .text-gradient {
@@ -185,8 +185,8 @@
     -webkit-backdrop-filter: blur(8px) saturate(140%);
   }
   .hero-glass-panel {
-    backdrop-filter: blur(4px) saturate(140%);
-    -webkit-backdrop-filter: blur(4px) saturate(140%);
+    backdrop-filter: blur(2px) saturate(140%);
+    -webkit-backdrop-filter: blur(2px) saturate(140%);
   }
   /* cap the huge ambient-orb blurs on phones (GPU-heavy) */
   .spatial-orb {
@@ -221,8 +221,8 @@
   -webkit-backdrop-filter: blur(8px) saturate(140%);
 }
 .is-coarse .hero-glass-panel {
-  backdrop-filter: blur(4px) saturate(140%);
-  -webkit-backdrop-filter: blur(4px) saturate(140%);
+  backdrop-filter: blur(2px) saturate(140%);
+  -webkit-backdrop-filter: blur(2px) saturate(140%);
 }
 .is-coarse .spatial-orb {
   filter: blur(36px) !important;
