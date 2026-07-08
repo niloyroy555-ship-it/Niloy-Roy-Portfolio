@@ -7,20 +7,40 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', display: 'swap', weight: ['400', '500', '600', '700'] })
 const graffiti = localFont({ src: '../public/fonts/adrip1.ttf', variable: '--font-graffiti', display: 'swap' })
 
+// Single source of truth for the site's public URL.
+// Set NEXT_PUBLIC_BASE_URL in your Vercel project's Environment Variables
+// to your real production domain (e.g. https://niloyroy.com).
+// Everything below reads from this constant so it can never drift out of sync.
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://niloy-roy-portfolio.vercel.app'
+
 export const metadata = {
-  // IMPORTANT: set NEXT_PUBLIC_BASE_URL in your deployment to your real site URL (https://example.com)
-  // Fallback below points to the GitHub Pages URL for this repo so social scrapers get an absolute origin.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://niloyroy555-ship-it.github.io/Niloy-Roy-Portfolio'),
+  metadataBase: new URL(baseUrl),
   title: 'Niloy Roy — AI Visual Designer, Motion Designer & Video Editor',
   description: 'Portfolio of Niloy Roy — AI Visual Designer, Creative Designer, Video Editor & Prompt Engineer. Cinematic brand creatives, motion design and photography for premium brands.',
   keywords: ['Niloy Roy', 'AI Visual Designer', 'Motion Designer', 'Video Editor', 'Graphic Designer', 'Prompt Engineer', 'Portfolio', 'Kolkata'],
   authors: [{ name: 'Niloy Roy' }],
   openGraph: {
+    url: baseUrl,
     title: 'Niloy Roy — AI Visual Designer & Motion Designer',
     description: 'Cinematic brand creatives, motion design and photography for premium brands.',
     type: 'website',
-    // Use the portrait.jpg that already exists in /public — avoid spaces in filenames for social scrapers
-    images: ['/portrait.jpg'],
+    siteName: 'Niloy Roy Portfolio',
+    images: [
+      {
+        // Resolved against metadataBase -> `${baseUrl}/og-image.png`
+        url: '/og-image.png',
+        // Must match the actual file's real pixel dimensions or some
+        // crawlers (Facebook/LinkedIn) will reject or mis-render the image.
+        width: 1728,
+        height: 910,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Niloy Roy — AI Visual Designer & Motion Designer',
+    description: 'Cinematic brand creatives, motion design and photography for premium brands.',
+    images: ['/og-image.png'],
   },
   robots: { index: true, follow: true },
 }
@@ -29,12 +49,21 @@ export const viewport = {
   themeColor: '#08080A',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${grotesk.variable} ${graffiti.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${grotesk.variable} ${graffiti.variable}`}>
       <head>
+        {/* Preload the hero video's poster frame so the splash paints instantly;
+            the video itself streams in right after via its own preload="auto". */}
+        <link
+          rel="preload"
+          as="image"
+          href="/hero/hero-poster.jpg"
+          fetchPriority="high"
+        />
         <script dangerouslySetInnerHTML={{__html:'window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);'}} />
       </head>
       <body>

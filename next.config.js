@@ -8,7 +8,24 @@ const nextConfig = {
   },
   // Renamed from experimental.serverComponentsExternalPackages in Next 15
   serverExternalPackages: ['mongodb'],
+  // @splinetool/react-spline v4 ships ESM-only exports; transpile so webpack resolves it
+  transpilePackages: ['@splinetool/react-spline'],
+  // Tree-shakes icon imports (lucide-react is used across nav/hero/timeline/
+  // portfolio/contact/project-modal) so each file only ships the specific
+  // icons it uses instead of pulling in the whole library's module graph.
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
   webpack(config, { dev }) {
+    // @splinetool/react-spline v4 exports map lacks a "default" condition which
+    // breaks webpack resolution — alias straight to the dist ESM file.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@splinetool/react-spline': require('path').resolve(
+        __dirname,
+        'node_modules/@splinetool/react-spline/dist/react-spline.js'
+      ),
+    };
     if (dev) {
       // Reduce CPU/memory from file watching
       config.watchOptions = {
