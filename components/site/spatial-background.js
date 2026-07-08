@@ -7,6 +7,11 @@ import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'fram
 // that drift with mouse movement + scroll, like looking through a visionOS window.
 export default function SpatialBackground() {
   const [parallax, setParallax] = useState(false)
+  // Independent from `parallax`/pointer-fine: this specifically tracks touch
+  // capability so tablets (which are `pointer: coarse` but often report a
+  // desktop-width viewport) get the same reduced layer count as phones,
+  // instead of only devices under the `md:` width breakpoint.
+  const [coarsePointer, setCoarsePointer] = useState(false)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
   const sx = useSpring(mx, { stiffness: 40, damping: 20 })
@@ -26,6 +31,7 @@ export default function SpatialBackground() {
   const scroll2 = useTransform(scrollYProgress, [0, 1], [0, 140])
 
   useEffect(() => {
+    setCoarsePointer(window.matchMedia('(pointer: coarse)').matches)
     const fine = window.matchMedia('(pointer: fine)').matches
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (!fine || reduce) return
@@ -53,7 +59,10 @@ export default function SpatialBackground() {
           distinct of the four orbs, and every blurred layer removed there
           is one less full-screen blur pass the GPU has to composite on
           every scroll frame. */}
-      <motion.div style={parallax ? { x: l3x, y: l3y } : undefined} className="absolute inset-0 hidden md:block">
+      <motion.div
+        style={parallax ? { x: l3x, y: l3y } : undefined}
+        className={`absolute inset-0 ${coarsePointer ? 'hidden' : 'hidden md:block'}`}
+      >
         <motion.div style={{ y: scroll2 }} className="absolute inset-0">
           <div
             className="spatial-orb absolute left-[8%] top-[55%] h-[46vh] w-[46vh] rounded-full blur-[90px]"
@@ -88,7 +97,7 @@ export default function SpatialBackground() {
           full viewport is another compositing pass that's not worth it on
           phones for a barely-perceptible amount of grain */}
       <div
-        className="absolute inset-0 hidden opacity-[0.05] mix-blend-overlay md:block"
+        className={`absolute inset-0 opacity-[0.05] mix-blend-overlay ${coarsePointer ? 'hidden' : 'hidden md:block'}`}
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",

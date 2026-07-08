@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { projects } from '@/lib/portfolio-data'
@@ -14,12 +14,38 @@ function posterFor(src) {
 
 function Media({ project, className }) {
   const coarse = useCoarsePointer()
+  const videoRef = useRef(null)
   const style = { objectPosition: project.coverPosition || 'center' }
 
+  // Only these two projects (flagged in portfolio-data.js) autoplay their
+  // cover video regardless of pointer type. Everything else keeps showing
+  // a static poster on touch devices — that's the behavior the tablet
+  // performance pass depended on, and two looping videos is a very
+  // different GPU/battery cost than eight.
+  const forceAutoplay = !!project.alwaysAutoplay
+
+  useEffect(() => {
+    if (!forceAutoplay) return
+    const el = videoRef.current
+    if (!el) return
+    // Pause the loop while the card is scrolled off-screen so "always
+    // autoplay" doesn't mean "decode video forever no matter where the
+    // user is on the page".
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) el.play().catch(() => {})
+        else el.pause()
+      },
+      { threshold: 0.15 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [forceAutoplay])
+
   if (project.type === 'video') {
-    // Mobile: show the lightweight poster instead of autoplaying the mp4.
-    // Tapping the card opens the case study where the video can be played.
-    if (coarse) {
+    // Mobile: show the lightweight poster instead of autoplaying the mp4 —
+    // unless this specific project is flagged to always autoplay.
+    if (coarse && !forceAutoplay) {
       return <RevealMedia type="image" src={posterFor(project.cover)} alt={project.title} className={className} style={style} />
     }
     return (
@@ -29,7 +55,8 @@ function Media({ project, className }) {
         poster={posterFor(project.cover)}
         className={className}
         style={style}
-        videoProps={{ muted: true, loop: true, playsInline: true, autoPlay: true, preload: 'metadata' }}
+        mediaRef={forceAutoplay ? videoRef : undefined}
+        videoProps={{ muted: true, loop: true, playsInline: true, autoPlay: true, preload: forceAutoplay ? 'auto' : 'metadata' }}
       />
     )
   }
@@ -127,7 +154,7 @@ export default function Portfolio({ onOpen }) {
         </Reveal>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
         {projects.map((p, i) => (
           <ProjectCard key={p.id} project={p} index={i} onOpen={onOpen} />
         ))}
