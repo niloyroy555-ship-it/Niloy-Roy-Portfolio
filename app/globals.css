@@ -64,6 +64,14 @@
     backdrop-filter: blur(3px) saturate(115%);
     -webkit-backdrop-filter: blur(3px) saturate(115%);
   }
+  /* Even lighter pass reserved for the hero name plate: just enough
+     blur to keep the text crisp and legible, without smudging the
+     cyber-arm video loop playing behind it into mush. */
+  .glass-ultrathin {
+    background: rgba(255, 255, 255, 0.008);
+    backdrop-filter: blur(1.5px) saturate(108%);
+    -webkit-backdrop-filter: blur(1.5px) saturate(108%);
+  }
   .text-balance { text-wrap: balance; }
   .grain {
     position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0.035;
