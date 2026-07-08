@@ -26,19 +26,6 @@ export default function Hero({ ready = true }) {
   const [coarsePointer, setCoarsePointer] = useState(false)
   const gyroAmp = coarsePointer ? 1.9 : 1
 
-  // Portrait phones/tablets are much taller than the video's 16:9 frame —
-  // object-cover would zoom in and crop most of the width away. Below the
-  // desktop breakpoint, in portrait, we switch to object-contain so the
-  // whole shot stays visible (letterboxed) instead of getting cropped.
-  const [fitContain, setFitContain] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1024px) and (orientation: portrait)')
-    const update = () => setFitContain(mq.matches)
-    update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
-
   // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
@@ -150,7 +137,7 @@ export default function Hero({ ready = true }) {
   return (
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3">
       {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
-      <div className={`absolute inset-0 [perspective:1200px] ${fitContain ? 'bg-base' : ''}`} aria-hidden>
+      <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
         <motion.div
           className="absolute inset-0"
           style={{
@@ -164,7 +151,7 @@ export default function Hero({ ready = true }) {
         >
           <video
             ref={videoRef}
-            className={`h-full w-full object-center ${fitContain ? 'object-contain' : 'object-cover'}`}
+            className="h-full w-full object-cover object-center"
             poster="/hero/hero-poster.jpg"
             autoPlay={!reduceMotion}
             muted
