@@ -32,8 +32,8 @@ const BAR_PEAKS = [7, 15, 10, 18, 9]
 export default function AudioPlayer({
   src = '/audio/theme.mp3',
   // Edit these two to whatever track is actually playing.
-  title = 'Ambient Theme',
-  artist = 'Site Score',
+  title = 'Now Playing',
+  artist = 'Kanye West - POWER (Instrumental)',
 }) {
   const audioRef = useRef(null)
   const [ready, setReady] = useState(false)
