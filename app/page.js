@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Toaster } from 'sonner'
 import SmoothScroll from '@/components/site/smooth-scroll'
@@ -31,6 +31,11 @@ function App() {
   const [active, setActive] = useState(null)
   // becomes true the moment the intro starts revealing the hero
   const [heroReady, setHeroReady] = useState(false)
+  // Stable reference: without this, every unrelated re-render of App (e.g.
+  // heroReady flipping) would hand ProjectModal a brand-new onClose
+  // function, re-running its history-management effect and pushing a
+  // duplicate history entry even though no project actually changed.
+  const closeModal = useCallback(() => setActive(null), [])
 
   return (
     <SmoothScroll>
@@ -50,7 +55,7 @@ function App() {
           <Contact />
         </main>
         <Footer />
-        <ProjectModal project={active} onClose={() => setActive(null)} />
+        <ProjectModal project={active} onClose={closeModal} />
       </div>
     </SmoothScroll>
   )

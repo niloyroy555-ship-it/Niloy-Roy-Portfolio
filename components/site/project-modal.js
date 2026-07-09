@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import RevealMedia from './reveal-media'
@@ -50,17 +50,42 @@ function Meta({ label, items }) {
 
 export default function ProjectModal({ project, onClose }) {
   const coarse = useCoarsePointer()
+  const pushedRef = useRef(false)
+
   useEffect(() => {
-    if (project) {
-      document.body.style.overflow = 'hidden'
-      if (window.__lenis) window.__lenis.stop()
+    if (!project) return
+
+    document.body.style.overflow = 'hidden'
+    if (window.__lenis) window.__lenis.stop()
+
+    // Push a history entry the moment a case study opens, so Android's
+    // hardware/gesture back button closes this modal and returns to the
+    // Selected Work grid — instead of navigating away from the page
+    // entirely, which is what happened with no history entry to "undo".
+    window.history.pushState({ projectModal: project.id }, '')
+    pushedRef.current = true
+
+    const onPopState = () => {
+      pushedRef.current = false
+      onClose()
     }
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
+
+    window.addEventListener('popstate', onPopState)
     window.addEventListener('keydown', onKey)
+
     return () => {
       document.body.style.overflow = ''
       if (window.__lenis) window.__lenis.start()
+      window.removeEventListener('popstate', onPopState)
       window.removeEventListener('keydown', onKey)
+      // Closed via the X button / backdrop tap / Escape rather than the
+      // back button — undo the history entry we pushed so it doesn't
+      // leave a dead entry the visitor has to click back through later.
+      if (pushedRef.current) {
+        pushedRef.current = false
+        window.history.back()
+      }
     }
   }, [project, onClose])
 

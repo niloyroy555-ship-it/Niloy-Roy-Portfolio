@@ -36,6 +36,7 @@ export default function AudioPlayer({
   artist = 'Kanye West - POWER (Instrumental)',
 }) {
   const audioRef = useRef(null)
+  const rootRef = useRef(null)
   const [ready, setReady] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(false)
@@ -74,22 +75,41 @@ export default function AudioPlayer({
   // First-click-anywhere fallback. Passive, capture phase, removes itself
   // after the first attempt so it never interferes with normal page
   // interactions (link clicks, form focus, etc.) after that.
+  //
+  // On touch devices a single tap fires BOTH `touchstart` and, shortly
+  // after, a synthesized `click`. Because this listener runs in the
+  // capture phase on `window`, it used to see a tap on the card's own
+  // play button before the button's own onClick handler did — calling
+  // start() from the touchstart, then having togglePlay's onClick fire a
+  // moment later, see `startedRef.current` already true, and immediately
+  // pause what had just started. That race is what made "tapping does
+  // not work" on Android: the first tap started and instantly stopped the
+  // audio within the same gesture. Skipping taps that land inside the
+  // player itself (it already calls start() from togglePlay) removes the
+  // race entirely.
   useEffect(() => {
     if (!ready) return
-    const handler = () => {
-      start()
+    const detach = () => {
       window.removeEventListener('click', handler, true)
       window.removeEventListener('touchstart', handler, true)
       window.removeEventListener('keydown', handler, true)
+    }
+    const handler = (e) => {
+      if (startedRef.current) {
+        detach()
+        return
+      }
+      if (rootRef.current && e.target && rootRef.current.contains(e.target)) {
+        // Let the player's own button handle its own tap/click.
+        return
+      }
+      start()
+      detach()
     }
     window.addEventListener('click', handler, true)
     window.addEventListener('touchstart', handler, true)
     window.addEventListener('keydown', handler, true)
-    return () => {
-      window.removeEventListener('click', handler, true)
-      window.removeEventListener('touchstart', handler, true)
-      window.removeEventListener('keydown', handler, true)
-    }
+    return detach
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
 
@@ -100,11 +120,15 @@ export default function AudioPlayer({
       start()
       return
     }
-    if (playing) {
+    // Trust the actual media element rather than React state here — on a
+    // fast double-fire (touchstart + click) the state update from a
+    // just-resolved play() promise can lag a render behind, which was
+    // enough to make a tap look like it did nothing.
+    if (el.paused) {
+      el.play().then(() => setPlaying(true)).catch(() => {})
+    } else {
       el.pause()
       setPlaying(false)
-    } else {
-      el.play().then(() => setPlaying(true)).catch(() => {})
     }
   }
 
@@ -141,6 +165,7 @@ export default function AudioPlayer({
         onLoadedMetadata={onLoadedMetadata}
       />
       <motion.div
+        ref={rootRef}
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
