@@ -26,6 +26,19 @@ export default function Hero({ ready = true }) {
   const [coarsePointer, setCoarsePointer] = useState(false)
   const gyroAmp = coarsePointer ? 1.9 : 1
 
+  // Portrait phones/tablets are much taller than the video's 16:9 frame —
+  // object-cover would zoom in and crop most of the width away. Below the
+  // desktop breakpoint, in portrait, we switch to object-contain so the
+  // whole shot stays visible (letterboxed) instead of getting cropped.
+  const [fitContain, setFitContain] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1024px) and (orientation: portrait)')
+    const update = () => setFitContain(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
   // shared pointer/gyro position (-0.5 .. 0.5)
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
@@ -111,14 +124,10 @@ export default function Hero({ ready = true }) {
     }
   }, [mx, my])
 
-  // Seeking back a beat before the clip actually ends (instead of relying only
-  // on native `loop`) avoids the single black frame most browsers flash when
-  // `loop` tears the decoder down and restarts it — but `timeupdate` doesn't
-  // fire on every frame, so this can occasionally miss its window and let the
-  // clip hit its real end. `loop` stays on as a fallback for that case: on the
-  // (common) frames where the seek lands in time, `ended` never fires and
-  // `loop` never engages, so it costs nothing and just guarantees the video
-  // never gets stuck on its last frame.
+  // Native `loop` tears the decoder down and restarts it, which shows as a
+  // single black frame at the seam on most browsers. Seeking back a beat
+  // before the clip actually ends keeps the same continuous playback
+  // session running, so there's nothing to flash.
   const handleTimeUpdate = () => {
     const v = videoRef.current
     if (!v || !v.duration) return
@@ -137,25 +146,17 @@ export default function Hero({ ready = true }) {
   return (
     <section id="top" ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-3">
       {/* ---- HUD wallpaper background with parallax/gyro tilt ---- */}
-      <div className="absolute inset-0 [perspective:1200px]" aria-hidden>
+      <div className={`absolute inset-0 [perspective:1200px] ${fitContain ? 'bg-base' : ''}`} aria-hidden>
         <motion.div
           className="absolute inset-0"
-          style={{
-            x: bgX,
-            y: bgY,
-            rotateX: bgRotX,
-            rotateY: bgRotY,
-            scale: 1.08,
-            transformStyle: 'preserve-3d',
-          }}
+          style={{ x: bgX, y: bgY, rotateX: bgRotX, rotateY: bgRotY, scale: fitContain ? 1 : 1.08, transformStyle: 'preserve-3d' }}
         >
           <video
             ref={videoRef}
-            className="h-full w-full object-cover object-center"
+            className={`h-full w-full object-center ${fitContain ? 'object-contain' : 'object-cover'}`}
             poster="/hero/hero-poster.jpg"
             autoPlay={!reduceMotion}
             muted
-            loop
             playsInline
             preload="auto"
             disablePictureInPicture
@@ -167,13 +168,9 @@ export default function Hero({ ready = true }) {
                 before MP4/H.264 in each tier since it's ~45% smaller at the
                 same quality — browsers just use the first source they can
                 decode, so this costs nothing on browsers that support it
-                and silently falls back to H.264 on the ones that don't.
-                4K is its own tier gated to min-width so phones/tablets never
-                even consider downloading a ~24MB file for a screen that
-                can't show the extra resolution anyway. */}
+                and silently falls back to H.264 on the ones that don't. */}
             <source media="(max-width: 767px)" src="/hero/cyber-arm-720.webm" type="video/webm" />
             <source media="(max-width: 767px)" src="/hero/cyber-arm-720.mp4" type="video/mp4" />
-            <source media="(min-width: 1920px)" src="/hero/cyber-arm-2160.mp4" type="video/mp4" />
             <source src="/hero/cyber-arm-1080.webm" type="video/webm" />
             <source src="/hero/cyber-arm-1080.mp4" type="video/mp4" />
           </video>

@@ -8,6 +8,7 @@ import CustomCursor from '@/components/site/custom-cursor'
 import SpatialBackground from '@/components/site/spatial-background'
 import IntroSplash from '@/components/site/intro-splash'
 import Nav from '@/components/site/nav'
+import NowPlaying from '@/components/site/now-playing'
 import Hero from '@/components/site/hero'
 import Marquee from '@/components/site/marquee'
 import Portfolio from '@/components/site/portfolio'
@@ -38,6 +39,7 @@ function App() {
         <CustomCursor />
         <Toaster position="bottom-center" richColors />
         <IntroSplash onReveal={() => setHeroReady(true)} />
+        <NowPlaying />
         <Nav />
         <main>
           <Hero ready={heroReady} />
