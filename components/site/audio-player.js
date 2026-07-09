@@ -30,7 +30,7 @@ const formatTime = (secs) => {
 const BAR_PEAKS = [7, 15, 10, 18, 9]
 
 export default function AudioPlayer({
-  src = '/audio/theme.mp3',
+  src = '/audio/kanye-power-instrumental.mp3',
   // Edit these two to whatever track is actually playing.
   title = 'Now Playing',
   artist = 'Kanye West - POWER (Instrumental)',

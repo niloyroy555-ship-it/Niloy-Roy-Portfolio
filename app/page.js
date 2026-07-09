@@ -45,7 +45,11 @@ function App() {
         <Toaster position="bottom-center" richColors />
         <IntroSplash onReveal={() => setHeroReady(true)} />
         <Nav />
-        <AudioPlayer />
+        <AudioPlayer
+          src="/audio/kanye-power-instrumental.mp3"
+          title="Now Playing"
+          artist="Kanye West - POWER (Instrumental)"
+        />
         <main>
           <Hero ready={heroReady} />
           <Marquee />
