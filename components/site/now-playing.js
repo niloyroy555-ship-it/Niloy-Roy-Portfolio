@@ -13,7 +13,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 // the placeholder file is a copyrighted master recording and is not licensed
 // for public distribution.
 const TRACK = {
-  src: '/audio/now-playing-POWER (Instrumental).mp3',
+  src: '/audio/now-playing-Kanye West - POWER (Instrumental)',
   title: 'Now Playing',
   artist: 'Kanye West',
 }
